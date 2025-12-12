@@ -5,10 +5,12 @@ on:
     branches: [ "main" ]
     paths-ignore:
       - '.github/workflows/**'
+      - 'sonar-project.properties'  # Ignora modifiche al file di config Sonar
   pull_request:
     branches: [ "main" ]
     paths-ignore:
       - '.github/workflows/**'
+      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -50,12 +52,12 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      # Build Manuale SOLO per Java (più robusto dell'autobuild)
+      # Build Manuale SOLO per Java
       - name: Build Java
         if: matrix.language == 'java'
         run: mvn clean package -DskipTests -B -f pom.xml
 
-      # Autobuild SOLO per Go (Python e JS non ne hanno bisogno)
+      # Autobuild SOLO per Go
       - name: Autobuild
         if: matrix.language == 'go'
         uses: github/codeql-action/autobuild@v4
