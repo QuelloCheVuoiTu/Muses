@@ -4,51 +4,71 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore:
-      - '.github/workflows/**'  # Ignora modifiche a qualsiasi file in questa cartella
+      - '.github/workflows/**'
   pull_request:
     branches: [ "main" ]
     paths-ignore:
-      - '.github/workflows/**'  # Ignora modifiche a qualsiasi file in questa cartella
-  workflow_dispatch:            # Ti permette di lanciarlo a mano se serve testare la pipeline
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 jobs:
-  codeql-scan:
-    name: CodeQL Analysis
+  analyze:
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
       security-events: write
 
+    strategy:
+      fail-fast: false
+      matrix:
+        # CodeQL supporta 'java' (che include Kotlin), 'python', 'go', 'javascript'
+        language: [ 'java', 'python', 'go', 'javascript' ]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # AGGIORNATO A v4
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: 'java'
-
-      # Setup Java manuale (necessario per build custom)
+      # Setup specifico per Java/Kotlin (necessario per la compilazione)
       - name: Set up JDK 23
+        if: matrix.language == 'java'
         uses: actions/setup-java@v4
         with:
-          java-version: '23'      
+          java-version: '23'
           distribution: 'temurin'
           cache: maven
 
-      # Compilazione pulita per CodeQL
-      - name: Build Java for CodeQL
+      # Setup specifico per Go (necessario per la build automatica di Go)
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21' # O la versione che usi
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+
+      # Build Manuale SOLO per Java/Kotlin (Maven)
+      - name: Build Java
+        if: matrix.language == 'java'
         run: mvn clean package -DskipTests -B
 
-      # AGGIORNATO A v4
+      # Autobuild per gli altri linguaggi compilati (es. Go)
+      # Python e JS non ne hanno bisogno, CodeQL li gestisce in automatico qui
+      - name: Autobuild
+        if: matrix.language != 'java'
+        uses: github/codeql-action/autobuild@v4
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{matrix.language}}"
 
-      # Riepilogo specifico per questo workflow
       - name: CodeQL Summary
         if: always()
         run: |
-          echo "### 🔍 CodeQL Security" >> $GITHUB_STEP_SUMMARY
-          echo "Scansione v4 completata. [Vedi Security Tab](https://github.com/${{ github.repository }}/security/code-scanning)" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 CodeQL ${{ matrix.language }} Security" >> $GITHUB_STEP_SUMMARY
+          echo "Scansione completata." >> $GITHUB_STEP_SUMMARY
