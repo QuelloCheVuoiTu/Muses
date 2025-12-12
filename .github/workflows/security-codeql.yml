@@ -23,14 +23,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # CodeQL supporta 'java' (che include Kotlin), 'python', 'go', 'javascript'
         language: [ 'java', 'python', 'go', 'javascript' ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup specifico per Java/Kotlin (necessario per la compilazione)
+      # Setup Java
       - name: Set up JDK 23
         if: matrix.language == 'java'
         uses: actions/setup-java@v4
@@ -39,36 +38,29 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Setup specifico per Go (necessario per la build automatica di Go)
+      # Setup Go
       - name: Set up Go
         if: matrix.language == 'go'
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21' # O la versione che usi
+          go-version: '1.21'
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
 
-      # Build Manuale SOLO per Java/Kotlin (Maven)
+      # Build Manuale SOLO per Java (più robusto dell'autobuild)
       - name: Build Java
         if: matrix.language == 'java'
-        run: mvn clean package -DskipTests -B
+        run: mvn clean package -DskipTests -B -f pom.xml
 
-      # Autobuild per gli altri linguaggi compilati (es. Go)
-      # Python e JS non ne hanno bisogno, CodeQL li gestisce in automatico qui
+      # Autobuild SOLO per Go (Python e JS non ne hanno bisogno)
       - name: Autobuild
-        if: matrix.language != 'java'
+        if: matrix.language == 'go'
         uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{matrix.language}}"
-
-      - name: CodeQL Summary
-        if: always()
-        run: |
-          echo "### 🔍 CodeQL ${{ matrix.language }} Security" >> $GITHUB_STEP_SUMMARY
-          echo "Scansione completata." >> $GITHUB_STEP_SUMMARY
