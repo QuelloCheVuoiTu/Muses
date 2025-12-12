@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4009570236",
+    "project_id": "fcm-position-7857a",
+    "storage_bucket": "fcm-position-7857a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4009570236:android:e538cf2a137eff638b05b9",
+        "android_client_info": {
+          "package_name": "it.unisannio.muses"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3-PLgOSde43SVswJChR_5uuHDdCwAvlI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

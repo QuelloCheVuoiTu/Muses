@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Versione alternativa più semplice - salva come res/drawable/ic_user.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Cerchio di sfondo -->
+    <path
+        android:fillColor="@color/success_green"
+        android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+
+    <!-- Icona utente -->
+    <path
+        android:fillColor="@color/ios_text_primary"
+        android:pathData="M12,5.9c1.16,0 2.1,0.94 2.1,2.1s-0.94,2.1 -2.1,2.1S9.9,9.16 9.9,8S10.84,5.9 12,5.9m0,9.89c2.97,0 6.1,1.46 6.1,2.1v1.14H5.9V17.9C5.9,17.25 9.03,15.79 12,15.79z" />
+
+    <!-- Bordo del cerchio -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeWidth="1"
+        android:strokeColor="@color/ios_text_primary"
+        android:pathData="M12,12m-9.5,0a9.5,9.5 0,1 1,19 0a9.5,9.5 0,1 1,-19 0" />
+</vector>

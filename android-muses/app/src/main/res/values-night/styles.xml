@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ============================================= -->
+    <!-- STILI COMPONENTI TEMA SCURO MUSES -->
+    <!-- ============================================= -->
+
+    <!-- Stile CardView per tema scuro -->
+    <style name="Widget.Muses.CardView.Dark" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/card_background</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="rippleColor">@color/ripple_color_light</item>
+    </style>
+
+    <!-- Stile TextInputLayout per tema scuro -->
+    <style name="Widget.Muses.TextInputLayout.OutlinedBox.Dark" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/apple_blue</item>
+        <item name="hintTextColor">@color/apple_blue</item>
+        <item name="android:textColorHint">@color/input_hint</item>
+        <item name="boxBackgroundColor">@color/input_background</item>
+        <item name="startIconTint">@color/ios_text_secondary</item>
+        <item name="endIconTint">@color/ios_text_secondary</item>
+    </style>
+
+    <!-- Stile Button primario per tema scuro -->
+    <style name="Widget.Muses.Button.Primary.Dark" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/apple_blue</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="rippleColor">@color/ripple_color_primary</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+
+    <!-- Stile Button secondario per tema scuro -->
+    <style name="Widget.Muses.Button.Secondary.Dark" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/apple_blue</item>
+        <item name="android:textColor">@color/apple_blue</item>
+        <item name="rippleColor">@color/ripple_color_primary</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <!-- Stile TextView per titoli tema scuro -->
+    <style name="TextAppearance.Muses.Headline.Dark" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@color/ios_text_primary</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Stile TextView per sottotitoli tema scuro -->
+    <style name="TextAppearance.Muses.Subtitle.Dark" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/ios_text_secondary</item>
+    </style>
+
+    <!-- Stile TextView per corpo del testo tema scuro -->
+    <style name="TextAppearance.Muses.Body.Dark" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/ios_text_primary</item>
+    </style>
+
+    <!-- Stile ProgressBar per tema scuro -->
+    <style name="Widget.Muses.ProgressBar.Dark" parent="Widget.MaterialComponents.CircularProgressIndicator">
+        <item name="indicatorColor">@color/apple_blue</item>
+        <item name="trackColor">@color/gray_light</item>
+    </style>
+</resources>

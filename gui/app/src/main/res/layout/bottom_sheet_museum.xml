@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Immagine del museo -->
+    <ImageView
+        android:id="@+id/museumImage"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="Immagine del museo"
+        android:background="@color/design_default_color_primary"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Nome del museo -->
+    <TextView
+        android:id="@+id/museumName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nome Museo"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Descrizione del museo -->
+    <TextView
+        android:id="@+id/museumDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Descrizione del museo"
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Informazioni dettagliate -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/museumHours"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Orari: 9:00 - 18:00"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/museumPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ingresso: €15"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/museumRating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="4.5 ⭐ (1200 recensioni)"
+            android:textSize="14sp"
+            android:textColor="@android:color/black" />
+
+    </LinearLayout>
+
+    <!-- Prima riga di bottoni -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btnGetDirections"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📍 Indicazioni"
+            android:layout_marginEnd="4dp"
+            style="@style/Widget.AppCompat.Button.Colored" />
+
+        <Button
+            android:id="@+id/btnMoreInfo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="💬 Info Chat"
+            android:layout_marginStart="4dp"
+            style="@style/Widget.AppCompat.Button.Colored" />
+
+    </LinearLayout>
+
+    <!-- Seconda riga - Bottone opere -->
+    <Button
+        android:id="@+id/btnViewArtworks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🎨 Visualizza Opere d'Arte"
+        style="@style/Widget.AppCompat.Button.Colored" />
+
+</LinearLayout>

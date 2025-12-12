@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="80"
+    android:viewportHeight="80">
+
+    <!-- Cerchio di sfondo -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,40m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"/>
+
+    <!-- Icona profilo -->
+    <path
+        android:fillColor="#007AFF"
+        android:pathData="M40,20c6.63,0 12,5.37 12,12s-5.37,12 -12,12 -12,-5.37 -12,-12 5.37,-12 12,-12zM40,50c8,0 24,4 24,12v6H16v-6c0,-8 16,-12 24,-12z"/>
+</vector>

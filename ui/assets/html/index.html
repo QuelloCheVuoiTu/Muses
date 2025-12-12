@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muses Welcome Page</title>
+    <link rel="stylesheet" type="text/css" href="/ui/assets/css/default.css"/>
+    <script src="/ui/assets/js/shared.js"></script>
+    <script src="/ui/assets/js/index_script.js"></script>
+</head>
+<style>
+.app-description {
+  font-size: 2em;             /* Standard, readable body font size (e.g., 16px) */
+  color: #333;               /* High-contrast dark gray for optimal reading */
+  line-height: 1.7;           /* CRITICAL for readability in paragraphs. 1.6-1.8 is ideal. */
+  max-width: 70ch;            /* The gold standard for readable text blocks */
+  margin-bottom: 1.5em;
+  text-align: left;       /* Standard spacing between paragraphs */
+}
+</style>
+<body>
+    <div class="container" style="padding: 1rem;">
+        <div id="index-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <div class="dashboard-title" style="color: rgb(255, 255, 245);"> <h1 style="display: inline;">🏛️ </h1>Benvenuto a MuSES <span id="currentMuseumName"></span></div>
+                <div class="dashboard-header-btn">
+                    <button class="logout-btn" onclick="signin()">Accedi</button>
+                    <button class="logout-btn" onclick="signup()">Registrati</button>
+                </div>
+                
+            </div>
+
+            <!-- <div class="tabs">
+                <button class="tab active" onclick="showTab('opere')">Opere</button>
+                <button class="tab" onclick="showTab('aggiungi')">Aggiungi Opera</button>
+                <button class="tab" onclick="showTab('modifica')">Modifica Opera</button>
+                <button class="tab" onclick="showTab('elimina')">Elimina Opera</button>
+                <button class="tab" onclick="showTab('modificaMuseo')">Modifica Museo</button>
+            </div> -->
+
+        </div>
+        <div class="app-description" style="padding: 2rem;margin-top: 2rem; border-radius: 1rem;  background:  rgb(255, 255, 245);color: black; border: 5px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);text-align: center;">
+                MuSES è un'applicazione web progettata per aiutare i musei nella gestione, organizzazione e manutenzione delle informazioni relative alle proprie collezioni di opere al fine di invogliare nuovi visitatori ad un'esperienza di gioco che si svolgerà nella visita del museo.
+            </div>
+        <div class="app-description" style="padding: 2rem;margin-top: 1rem; border-radius: 1rem;  background:  rgb(255, 255, 245);color: black; border: 5px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);text-align: center;">
+                La piattaforma permette i curatori e allo staff del museo di inserire, modificare e categorizzare le proprie opere che, una volta inserite nel sistema, permetteranno ai visitatori di trovare efficaciamente i musei da visitare sulla base delle proprie preferenze.      
+            </div>
+        
+    </div>
+</body>
+</html>

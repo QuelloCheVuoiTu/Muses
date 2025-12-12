@@ -1,0 +1,17 @@
+[MASTER]
+disable=
+    C0103,  # invalid-name
+    R0903,  # too-few-public-methods
+    R0911,  # too-many-return-statements
+    W0603,  # global-statement
+    W0718,  # broad-exception-caught
+    W0719,  # broad-exception-raised
+    E0401,  # import-module-not-found
+
+[FORMAT]
+indent-string = '\t'
+indent-after-paren = 0
+max-line-length = 120
+
+[MESSAGES CONTROL]
+disable = bad-indentation

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ============================================= -->
+    <!-- TEMA SCURO - PALETTE COLORI MUSES -->
+    <!-- ============================================= -->
+
+    <!-- Colori di base -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Apple Blue Palette per tema scuro - più brillanti -->
+    <color name="apple_blue">#409CFF</color>
+    <color name="apple_blue_dark">#1E88E5</color>
+    <color name="apple_blue_light">#6BB6FF</color>
+    <color name="apple_blue_very_light">#90CAF9</color>
+
+    <!-- Sfondi tema scuro -->
+    <color name="ios_background">#121212</color> <!-- Sfondo principale scuro -->
+    <color name="ios_background_secondary">#1E1E1E</color> <!-- Sfondo secondario -->
+    <color name="ios_background_tertiary">#2D2D30</color> <!-- Sfondo terziario per card -->
+    
+    <!-- Card e Surface -->
+    <color name="card_background">#1E1E1E</color>
+    <color name="surface_background">#2D2D30</color>
+    <color name="elevated_surface">#3C3C3C</color>
+
+    <!-- Testi tema scuro -->
+    <color name="ios_text_primary">#FFFFFF</color> <!-- Testo principale bianco -->
+    <color name="ios_text_secondary">#B3B3B3</color> <!-- Testo secondario grigio chiaro -->
+    <color name="ios_text_tertiary">#8A8A8A</color> <!-- Testo terziario -->
+    <color name="ios_text_disabled">#666666</color> <!-- Testo disabilitato -->
+
+    <!-- Separatori tema scuro -->
+    <color name="ios_separator">#3C3C3C</color>
+    <color name="ios_separator_opaque">#404040</color>
+    <color name="border_color">#404040</color>
+
+    <!-- Primary colors per tema scuro -->
+    <color name="colorPrimary">@color/apple_blue</color>
+    <color name="colorPrimaryDark">@color/apple_blue_dark</color>
+    <color name="colorAccent">@color/apple_blue</color>
+
+    <!-- Material Design 3 colors per tema scuro -->
+    <color name="md_theme_primary">@color/apple_blue</color>
+    <color name="md_theme_on_primary">#000000</color> <!-- Nero su blu -->
+    <color name="md_theme_primary_container">#0D47A1</color> <!-- Blu scuro per container -->
+    <color name="md_theme_on_primary_container">@color/apple_blue_light</color>
+
+    <!-- Grigi tema scuro -->
+    <color name="gray_light">#3C3C3C</color> <!-- Grigio chiaro per tema scuro -->
+    <color name="gray_medium">#666666</color> <!-- Grigio medio -->
+    <color name="gray_dark">#1E1E1E</color> <!-- Grigio scuro -->
+
+    <!-- Colori per stati (mantengo vivaci per visibilità) -->
+    <color name="success_green">#4CAF50</color>
+    <color name="warning_orange">#FF9800</color>
+    <color name="error_red">#F44336</color>
+
+    <!-- Daily Reward Colors per tema scuro -->
+    <color name="reward_claimed">#2E5D2E</color> <!-- Verde scuro -->
+    <color name="reward_available">#2D2D30</color> <!-- Superficie normale -->
+    <color name="reward_today">#4A3A2E</color> <!-- Arancione scuro -->
+    <color name="reward_unavailable">#1E1E1E</color> <!-- Superficie disabilitata -->
+
+    <!-- Common App Colors per tema scuro -->
+    <color name="main_background">@color/ios_background</color>
+    <color name="primary_color">@color/apple_blue</color>
+    <color name="accent_color">@color/apple_blue_light</color>
+    <color name="primary_text">@color/ios_text_primary</color>
+    <color name="secondary_text">@color/ios_text_secondary</color>
+    <color name="success_color">@color/success_green</color>
+    <color name="error_color">@color/error_red</color>
+
+    <!-- Colori specifici per Input Fields tema scuro -->
+    <color name="input_background">#2D2D30</color>
+    <color name="input_stroke">#404040</color>
+    <color name="input_stroke_focused">@color/apple_blue</color>
+    <color name="input_hint">#8A8A8A</color>
+
+    <!-- Ripple e States -->
+    <color name="ripple_color_light">#1AFFFFFF</color> <!-- 10% bianco -->
+    <color name="ripple_color_primary">#1A409CFF</color> <!-- 10% blu primario -->
+
+</resources>

@@ -1,0 +1,50 @@
+plugins {
+    // Apply the java and war plugins for a deployable web application.
+    id 'java'
+    id 'war'
+}
+
+group 'it.unisannio.studenti.challenge.questing'
+version '0.1-SNAPSHOT'
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+    // JAX-RS API (provided by WildFly)
+    providedCompile 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+
+    // Jersey (JAX-RS Reference Implementation) - only needed if you want to use Jersey features not provided by WildFly
+    implementation 'org.glassfish.jersey.core:jersey-server:3.1.0'
+    //implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.0'
+
+    // For JSON processing (if you later want to return JSON)
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:3.1.0'
+
+    // Jakarta JSON Processing (JSON-P) dependency for ChatService
+    implementation 'org.glassfish:jakarta.json:2.0.1'
+
+    // Test dependencies (optional, but good practice)
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+
+
+tasks.named('war') {
+    archiveBaseName.set('quest-builder')
+}
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}

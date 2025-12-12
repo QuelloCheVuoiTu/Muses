@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple bicycle vector drawable. Designed to be minimal and scaleable. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Left wheel -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M12,30
+            m-6,0
+            a6,6 0 1,0 12,0
+            a6,6 0 1,0 -12,0" />
+
+    <!-- Right wheel -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M36,30
+            m-6,0
+            a6,6 0 1,0 12,0
+            a6,6 0 1,0 -12,0" />
+
+    <!-- Frame: connecting wheels and seat tube -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M12,30 L20,22 L30,22 L36,30" />
+
+    <!-- Seat tube and saddle -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M20,22 L22,14 M19,12 L25,12" />
+
+    <!-- Handlebar and fork -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M30,22 L34,14 M33,13 L37,13" />
+
+    <!-- Pedal/crank -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M22,22 L18,26 M18,26 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+
+</vector>

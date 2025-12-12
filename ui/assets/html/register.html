@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione Museo</title>
+    <link rel="stylesheet" type="text/css" href="/ui/assets/css/default.css"/>
+    <script src="/ui/assets/js/shared.js"></script>
+    <script src="/ui/assets/js/register_script.js"></script>
+</head>
+<body>
+    <div class="container">
+            <div id="loginPage" class="login-container">
+                <div class="login-card">
+                    <h3>Registra Nuovo Museo</h3>
+                    <div id="loginAlert"></div>
+                    <div class="form-group">
+                        <label for="regName">Username Museo:</label>
+                        <input type="text" id="regName" placeholder="Username Museo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regPass">Password Museo:</label>
+                        <input type="password" id="regPass" placeholder="Password del museo">
+                    </div>
+
+                     <div class="form-group">
+                        <label for="name">Nome Museo:</label>
+                        <input type="text" id="name" placeholder="Nome del museo">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regDescrizione">Descrizione:</label>
+                        <textarea id="regDescrizione" placeholder="Descrizione del museo" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regLatitude">Latitudine:</label>
+                            <input type="number" id="regLatitude" step="0.000001" placeholder="es. 52.35778">
+                        </div>
+                        <div class="form-group">
+                            <label for="regLongitude">Longitudine:</label>
+                            <input type="number" id="regLongitude" step="0.000001" placeholder="es. 4.87944">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regHours">Orari:</label>
+                            <input type="text" id="regHours" placeholder="es. 10:00 - 18:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="regPrice">Prezzo:</label>
+                            <input type="text" id="regPrice" placeholder="es. €18">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="regType">Tipo:</label>
+                            <input type="text" id="regType" placeholder="es. Arte contemporanea" onkeydown="typeEnterListener(this)"> <span> Tipi inseriti: </span> <span id="regTypeShower"></span>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-secondary" onclick="addType()">Aggiungi Tipo</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regImageurl">URL Immagine:</label>
+                        <input type="url" id="regImageurl" placeholder="https://example.com/image.jpg">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regParent">Museo Padre:</label>
+                        <input type="text" id="regParent" placeholder="es. Rijksmuseum (opzionale)">
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="registerMuseum()">Registra Museo</button>
+                </div>
+            </div>
+    </div>
+</body>
+</html>
+

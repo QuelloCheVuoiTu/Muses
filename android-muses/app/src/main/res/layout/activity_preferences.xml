@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/main_background">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/preferences_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:title="Preferences"
+        android:titleTextColor="@android:color/white" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginTop="56dp"
+        android:background="@color/main_background">
+
+        <EditText
+            android:id="@+id/preferences_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter preferences separated by commas"
+            android:textColor="@color/primary_text"
+            android:textColorHint="@color/input_hint"
+            android:background="@color/input_background"
+            android:padding="12dp"
+            android:layout_margin="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/preferences_save_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Save"
+                android:layout_margin="8dp" />
+
+            <Button
+                android:id="@+id/preferences_reset_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Reset"
+                android:layout_margin="8dp" />
+
+            <Button
+                android:id="@+id/preferences_gen_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GEN. MISSION"
+                android:layout_margin="8dp"
+                android:backgroundTint="@android:color/holo_blue_light"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/preferences_empty_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nessuna preferenza"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_margin="8dp"
+            android:textColor="@color/secondary_text" />
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/preferences_swipe"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/preferences_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp" />
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/preferences_progress"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/preferences_empty_view_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No preferences found"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="80dp"
+        android:textColor="@color/secondary_text" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

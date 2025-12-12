@@ -1,0 +1,125 @@
+stages:
+  - build
+
+variables:
+  VERSION: "1.0"
+
+build-preferences:
+  variables:
+    IMAGE_FOLDER: "preferences"
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  stage: build
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd "$IMAGE_FOLDER"
+    - ls
+    - docker build -t "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION" .
+    - docker push "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION"
+    - echo "Compile complete."
+
+build-user:
+  variables:
+    IMAGE_FOLDER: "user"
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  stage: build
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd "$IMAGE_FOLDER"
+    - ls
+    - docker build -t "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION" .
+    - docker push "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION"
+    - echo "Compile complete."
+
+build-museo:
+  variables:
+    IMAGE_FOLDER: "museo"
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  stage: build
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd "$IMAGE_FOLDER"
+    - ls
+    - docker build -t "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION" .
+    - docker push "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION"
+    - echo "Compile complete."
+
+build-opere:
+  variables:
+    IMAGE_FOLDER: "opere"
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  stage: build
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd "$IMAGE_FOLDER"
+    - ls
+    - docker build -t "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION" .
+    - docker push "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION"
+    - echo "Compile complete."
+
+build-ui:
+  variables:
+    IMAGE_FOLDER: "ui"
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  stage: build
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd "$IMAGE_FOLDER"
+    - ls
+    - docker build -t "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION" .
+    - docker push "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION"
+    - echo "Compile complete."
+
+build-chat:
+  variables:
+    IMAGE_FOLDER: "chat"
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  stage: build
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd "$IMAGE_FOLDER"
+    - ls
+    - docker build -t "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION" .
+    - docker push "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION"
+    - echo "Compile complete."

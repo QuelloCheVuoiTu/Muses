@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione Museo</title>
+    <link rel="stylesheet" type="text/css" href="/ui/assets/css/default.css"/>
+    <script src="/ui/assets/js/shared.js"></script>
+    <script src="/ui/assets/js/dashboard_script.js" defer></script>
+</head>
+<body>
+    <div class="container">
+<!-- Dashboard -->
+        <div id="dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <div class="dashboard-title">Dashboard - <span id="currentMuseumName"></span></div>
+                <button class="logout-btn" onclick="logout()">Esci</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('opere')">Opere</button>
+                <button class="tab" onclick="showTab('reward')">Premi</button>
+                <button class="tab" onclick="showTab('aggiungi')">Aggiungi Opera</button>
+                <button class="tab" onclick="showTab('aggiungiReward')">Aggiungi Reward</button>
+                <button class="tab" onclick="showTab('modifica')">Modifica Opera</button>
+                <button class="tab" onclick="showTab('elimina')">Elimina Opera</button>
+                <button class="tab" onclick="showTab('modificaMuseo')">Modifica Museo</button>
+            </div>
+            
+            <!-- Tab Opere -->
+             <div id="opereTab" class="tab-content active">
+                <h2>Opere del Museo</h2>
+                
+                <div id="opereAlert"></div>
+                
+                <div id="opereLoading" class="loading hidden">
+                    <div class="spinner"></div>
+                    Caricamento opere...
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Cerca per nome...">
+                    <select id="searchType">
+                        <option value="">Tutti i tipi</option>
+                    </select>
+                    <button class="search-btn" onclick="searchOpere()">Cerca</button>
+                </div>
+                
+                <div id="opereGrid" class="opere-grid"></div>
+            </div>
+
+            <!-- Tab Rewards -->
+             <div id="rewardTab" class="tab-content">
+                <h2>Premi del Museo</h2>
+                
+                <div id="rewardAlert"></div>
+                
+                <div id="rewardLoading" class="loading hidden">
+                    <div class="spinner"></div>
+                    Caricamento reward...
+                </div>
+                
+                <div id="rewardsGrid" class="opere-grid"></div>
+            </div>
+            
+            <!-- Tab Aggiungi Opera -->
+            <div id="aggiungiTab" class="tab-content">
+                <h2>Aggiungi Nuova Opera</h2>
+                
+                <div id="addAlert"></div>
+                
+                <form id="addOperaForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addNome">Nome Opera:</label>
+                            <input type="text" id="addNome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addType">Tipo:</label>
+                            <input type="text" id="addType" placeholder="es. pittura, scultura, ecc." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="isExposed">Opera esposta:</label>
+                            <input type="checkbox" id="isExposed" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="addDescrizione">Descrizione:</label>
+                        <textarea id="addDescrizione" placeholder="Descrizione dell'opera" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="addImageurl">URL Immagine:</label>
+                        <input type="url" id="addImageurl" placeholder="https://example.com/image.jpg">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success btn-small">Aggiungi Opera</button>
+                        <button type="button" class="btn btn-small" onclick="clearAddForm()">Cancella</button>
+                    </div>
+                </form>
+            </div>
+            
+
+            <!-- Tab Aggiungi Reward -->
+            <div id="aggiungiRewardTab" class="tab-content">
+                <h2>Aggiungi Nuovo Reward</h2>
+                
+                <div id="addRewardAlert"></div>
+                <form id="addRewardForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="addSubject">Nome Reward:</label>
+                            <input type="text" id="addSubject" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addExpiration">Scadenza:</label>
+                            <input type="date" id="addExpiration" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="addDescription">Descrizione:</label>
+                        <input type="text" id="addDescription" required>
+                        <div class="form-group">
+                            <label for="addStock">Quantità in stock:</label>
+                            <input type="number" id="addStock" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <fieldset  id="reduction_type" >
+                                <legend>Scegli il tipo di riduzione</legend>
+                                <div style="display: flex;align-items: flex-start;margin-bottom: 5px;">
+                                    <label for="percentage" style="margin-left: 5px;">Percentuale</label>
+                                    <input type="radio" id="percentage" name="reduction" value="percentage" style="width: 16px;height: 16px;margin-left: 10px;margin-top: 4px;" checked />
+                                </div>
+                                <div style="display: flex;align-items: flex-start;margin-bottom: 5px;">
+                                    <label for="flat" style="margin-left: 5px;">Fisso</label>
+                                    <input type="radio" id="flat" name="reduction" value="flat" style="width: 16px;height: 16px;margin-left: 10px;margin-top: 4px;"/>
+                                </div>
+                            </fieldset>
+                            
+                        </div>
+                            
+                        <div class="form-group">
+                            <label for="addAmount">Ammontare:</label>
+                            <input type="number" id="addAmount" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success btn-small">Aggiungi Reward</button>
+                        <button type="button" class="btn btn-small" onclick="clearAddForm()">Cancella</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab Modifica Opera -->
+            <div id="modificaTab" class="tab-content">
+                <h2>Modifica Opera</h2>
+                
+                <div id="modifyAlert"></div>
+                
+                <div class="form-group">
+                    <label for="operaSelect">Seleziona Opera:</label>
+                    <select id="operaSelect" onchange="loadOperaForEdit()">
+                        <option value="">Seleziona un'opera</option>
+                    </select>
+                </div>
+                
+                <form id="modifyOperaForm" class="hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modNome">Nome Opera:</label>
+                            <input type="text" id="modNome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modType">Tipo:</label>
+                            <input type="text" id="modType" placeholder="es. pittura, scultura, ecc." required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modDescrizione">Descrizione:</label>
+                        <textarea id="modDescrizione" placeholder="Descrizione dell'opera" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modImageurl">URL Immagine:</label>
+                        <input type="url" id="modImageurl" placeholder="https://example.com/image.jpg">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success btn-small">Modifica Opera</button>
+                        <button type="button" class="btn btn-small" onclick="clearModifyForm()">Cancella</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Tab Elimina Opera -->
+            <div id="eliminaTab" class="tab-content">
+                <h2>Elimina Opera</h2>
+                
+                <div id="deleteAlert"></div>
+                
+                <div class="form-group">
+                    <label for="deleteOperaSelect">Seleziona Opera da Eliminare:</label>
+                    <select id="deleteOperaSelect">
+                        <option value="">Seleziona un'opera</option>
+                    </select>
+                </div>
+                
+                <div id="deleteOperaInfo" class="hidden">
+                    <div class="opera-card">
+                        <h3 id="deleteOperaName"></h3>
+                        <p><strong>Tipo:</strong> <span id="deleteOperaAutore"></span></p>
+                        <p><strong>Museo:</strong> <span id="deleteOperaTipo"></span></p>
+                        <p><strong>Descrizione:</strong> <span id="deleteOperaAnno"></span></p>
+                        <p><strong>URL Immagine:</strong> <span id="deleteOperaDescrizione"></span></p>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-danger btn-small" onclick="deleteOpera()" id="deleteConfirmBtn" disabled>Elimina Opera</button>
+                </div>
+            </div>
+            
+            <!-- Tab Modifica Museo -->
+            <div id="modificaMuseoTab" class="tab-content">
+                <h2>Modifica Informazioni Museo</h2>
+            
+                <div id="modifyMuseumAlert"></div>
+                    
+                <form id="modifyMuseumForm">
+                    <div class="form-group">
+                        <label for="modMuseumName">Nome Museo:</label>
+                        <input type="text" id="modMuseumName" required>
+                    </div>
+                        
+                    <div class="form-group">
+                        <label for="modMuseumDescription">Descrizione:</label>
+                        <textarea id="modMuseumDescription" placeholder="Descrizione del museo" required></textarea>
+                    </div>
+                        
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modMuseumLatitude">Latitudine:</label>
+                            <input type="number" id="modMuseumLatitude" step="0.000001" placeholder="es. 52.35778">
+                        </div>
+                        <div class="form-group">
+                            <label for="modMuseumLongitude">Longitudine:</label>
+                            <input type="number" id="modMuseumLongitude" step="0.000001" placeholder="es. 4.87944">
+                        </div>
+                    </div>
+                        
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modMuseumHours">Orari:</label>
+                            <input type="text" id="modMuseumHours" placeholder="es. 10:00 - 18:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="modMuseumPrice">Prezzo:</label>
+                            <input type="text" id="modMuseumPrice" placeholder="es. €18">
+                        </div>
+                    </div>
+                        
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modMuseumRating">Rating:</label>
+                            <input type="number" id="modMuseumRating" min="1" max="5" step="0.1" placeholder="es. 4.3">
+                        </div>
+                        <div class="form-group">
+                            <label for="modMuseumType">Tipo:</label>
+                            <input type="text" id="modMuseumType" placeholder="es. Arte contemporanea">
+                        </div>
+                    </div>
+                        
+                    <div class="form-group">
+                        <label for="modMuseumImageurl">URL Immagine:</label>
+                        <input type="url" id="modMuseumImageurl" placeholder="https://example.com/image.jpg">
+                    </div>
+                        
+                    <div class="form-group">
+                        <label for="modMuseumParent">Museo Padre:</label>
+                        <input type="text" id="modMuseumParent" placeholder="es. Rijksmuseum (opzionale)">
+                    </div>
+                        
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success btn-small">Modifica Museo</button>
+                        <button type="button" class="btn btn-small" onclick="clearModifyMuseumForm()">Cancella</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

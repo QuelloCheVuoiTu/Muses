@@ -1,0 +1,117 @@
+stages:
+  - generate
+  - trigger
+  - cleanup
+  - build
+  - combine
+
+.cleanup-definition:
+  stage: cleanup
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker system prune -f
+  
+# template for the build jobs to be generated
+.build-definition:
+  stage: build
+  image:
+    name: docker
+    pull_policy: if-not-present
+  services:
+    - name: docker:dind
+      pull_policy: if-not-present
+  before_script:
+    - docker info
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+   - |
+      echo "Building $IMAGE_FOLDER:$VERSION"
+      cd $IMAGE_DIR
+      if [ -f "build_script.sh" ];then
+        . build_script.sh
+      fi
+      docker build -t "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION" .
+      docker push "$CI_REGISTRY_IMAGE/$IMAGE_FOLDER:$VERSION"
+      echo "Build complete"
+
+# generate a file with job definitions iterating over a dynamic variable
+# this job will run on a runner
+generate-jobs:
+  stage: generate
+  variables:
+    VERSION: $CI_COMMIT_TAG
+  script: 
+    - |
+      VERSION=${VERSION:=latest-test}
+      if [ -z "$VERSION" ];then
+        VERSION="latest-test"
+      fi
+      rm -f generated-jobs.yml
+      for dir in */; do
+        IMAGE_FOLDER="${dir%%/*}"
+        if [ ! -f "$dir/Dockerfile" ];then
+          echo "Skipped $IMAGE_FOLDER because has no Dockerfile"
+          continue
+        fi
+        echo "Generating build job for $IMAGE_FOLDER"
+        cat <<EOF >>generated-jobs.yml
+        build-${IMAGE_FOLDER}:
+          extends: 
+            - .build-definition
+          variables:
+            VERSION: "${VERSION}"
+            IMAGE_FOLDER: "${IMAGE_FOLDER}"
+            IMAGE_DIR: "${dir}"
+      EOF
+      done
+      cat <<EOF >>generated-jobs.yml
+        cleanup-job:
+          extends: 
+            - .cleanup-definition
+      EOF
+  artifacts:
+    paths:
+      - generated-jobs.yml
+  rules:
+    # make sure we do not run into an infinite loop
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+      when: never
+    # replace this with the rules you actually want (i.e. on tag/merge, etc)
+    - if: $CI_PIPELINE_SOURCE != "parent_pipeline"
+    
+# trigger a pipeline injecting the generated job definitions
+# this job will "run" on gitlab itself
+trigger-jobs:
+  stage: trigger
+  trigger:
+    include:
+      - local: .gitlab-ci.yml
+      - artifact: generated-jobs.yml
+        job: generate-jobs
+    forward:
+      yaml_variables: true
+  rules:
+    # make sure we do not run into an infinite loop
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+      when: never
+    # replace this with the rules you actually want (i.e. on tag/merge, etc)
+    - if: $CI_PIPELINE_SOURCE != "parent_pipeline"
+
+finalize:
+  stage: combine
+  script:
+    - echo $CI_PIPELINE_SOURCE
+  rules:
+    # make sure we do not run into an infinite loop
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+      when: never
+    # replace this with the rules you actually want (i.e. on tag/merge, etc)
+    - if: $CI_PIPELINE_SOURCE != "parent_pipeline"

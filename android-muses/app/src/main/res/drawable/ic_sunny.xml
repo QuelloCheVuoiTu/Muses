@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Sole -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10s10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8s8,3.59 8,8S16.41,20 12,20z"/>
+    <!-- Centro del sole -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M12,7c-2.76,0 -5,2.24 -5,5s2.24,5 5,5s5,-2.24 5,-5S14.76,7 12,7z"/>
+    <!-- Raggi -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M12,1L10.5,3.5L13.5,3.5L12,1z"/>
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M12,20.5L13.5,23L10.5,23L12,20.5z"/>
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M20.5,12L23,13.5L23,10.5L20.5,12z"/>
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M1,12L3.5,10.5L3.5,13.5L1,12z"/>
+</vector>

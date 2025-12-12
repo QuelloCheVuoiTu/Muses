@@ -1,0 +1,326 @@
+basePath: /museums
+definitions:
+  main.Coordinates:
+    properties:
+      latitude:
+        description: Latitude in decimal degrees
+        type: number
+      longitude:
+        description: Longitude in decimal degrees
+        type: number
+    type: object
+  main.ErrorResponse:
+    properties:
+      error:
+        description: Error contains the error message
+        type: string
+    type: object
+  main.Museum:
+    properties:
+      _id:
+        description: The unique identifier of the museum
+        type: string
+      created_at:
+        description: Creation timestamp
+        type: string
+      description:
+        description: Short description of the museum
+        type: string
+      hours:
+        description: Opening hours
+        type: string
+      imageurl:
+        description: URL to the museum image
+        type: string
+      location:
+        allOf:
+        - $ref: '#/definitions/main.Coordinates'
+        description: Location coordinates of the museum
+      name:
+        description: Name of the museum
+        type: string
+      parent:
+        description: Parent is an optional external reference to another document
+          (ObjectID)
+        type: string
+      price:
+        description: Entry price information
+        type: string
+      types:
+        description: Types/categories of the museum
+        items:
+          type: string
+        type: array
+      updated_at:
+        description: Last update timestamp
+        type: string
+    type: object
+  main.SuccessResponse:
+    properties:
+      message:
+        description: Message contains a success message
+        type: string
+    type: object
+host: it.unisannio.muses
+info:
+  contact: {}
+  description: Simple REST API in order to properly manage a museum in the system.
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  title: MuSES - Museum Management API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Check if the service is running
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Museum system is online
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Health check endpoint
+      tags:
+      - Health
+  /museums:
+    get:
+      description: Retrieve all museums from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.Museum'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all museums
+      tags:
+      - Museums
+    post:
+      consumes:
+      - application/json
+      description: Create a new museum entity
+      parameters:
+      - description: Museum object
+        in: body
+        name: museum
+        required: true
+        schema:
+          $ref: '#/definitions/main.Museum'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.Museum'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new museum
+      tags:
+      - Museums
+  /museums/{id}:
+    delete:
+      description: Delete a museum by their ID
+      parameters:
+      - description: Museum ID
+        format: ObjectID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a museum
+      tags:
+      - Museums
+    get:
+      description: Get a single museum by its ObjectID
+      parameters:
+      - description: Museum ID
+        format: ObjectID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Museum'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a museum by ID
+      tags:
+      - Museums
+    put:
+      consumes:
+      - application/json
+      description: Update an existing museum's information
+      parameters:
+      - description: Museum ID
+        format: ObjectID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated museum object
+        in: body
+        name: museum
+        required: true
+        schema:
+          $ref: '#/definitions/main.Museum'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Museum'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a museum
+      tags:
+      - Museums
+  /museums/search:
+    get:
+      description: Retrieve all museums, optionally filtered by types, search term
+        or by a bounding box (min/max latitude and longitude)
+      parameters:
+      - collectionFormat: multi
+        description: 'Filter by museum types (comma-separated or repeated). Example:
+          types=art,history or types=art&types=history'
+        in: query
+        items:
+          type: string
+        name: types
+        type: array
+      - description: Partial name match
+        in: query
+        name: name
+        type: string
+      - description: Minimum latitude of bounding box (inclusive)
+        in: query
+        name: minLat
+        type: number
+      - description: Maximum latitude of bounding box (inclusive)
+        in: query
+        name: maxLat
+        type: number
+      - description: Minimum longitude of bounding box (inclusive)
+        in: query
+        name: minLon
+        type: number
+      - description: Maximum longitude of bounding box (inclusive)
+        in: query
+        name: maxLon
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.Museum'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get museums by types and/or location
+      tags:
+      - Museums
+  /ready:
+    get:
+      description: Deeper readiness check that verifies the service can reach required
+        dependencies (e.g. MongoDB). Returns 200 when ready, 503 when not.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Museum system is ready
+          schema:
+            type: string
+        "503":
+          description: Service Unavailable
+          schema:
+            type: string
+      summary: Service readiness probe
+      tags:
+      - Health
+schemes:
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Enter 'Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

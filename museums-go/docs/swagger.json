@@ -1,0 +1,494 @@
+{
+    "schemes": [
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Simple REST API in order to properly manage a museum in the system.",
+        "title": "MuSES - Museum Management API",
+        "contact": {},
+        "license": {
+            "name": "AGPL-3.0",
+            "url": "https://www.gnu.org/licenses/agpl-3.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "it.unisannio.muses",
+    "basePath": "/museums",
+    "paths": {
+        "/health": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check if the service is running",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "Museum system is online",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/museums": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all museums from the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Museums"
+                ],
+                "summary": "Get all museums",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Museum"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new museum entity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Museums"
+                ],
+                "summary": "Create a new museum",
+                "parameters": [
+                    {
+                        "description": "Museum object",
+                        "name": "museum",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Museum"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.Museum"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/museums/search": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all museums, optionally filtered by types, search term or by a bounding box (min/max latitude and longitude)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Museums"
+                ],
+                "summary": "Get museums by types and/or location",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Filter by museum types (comma-separated or repeated). Example: types=art,history or types=art\u0026types=history",
+                        "name": "types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Partial name match",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum latitude of bounding box (inclusive)",
+                        "name": "minLat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Maximum latitude of bounding box (inclusive)",
+                        "name": "maxLat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum longitude of bounding box (inclusive)",
+                        "name": "minLon",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Maximum longitude of bounding box (inclusive)",
+                        "name": "maxLon",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Museum"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/museums/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a single museum by its ObjectID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Museums"
+                ],
+                "summary": "Get a museum by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "ObjectID",
+                        "description": "Museum ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Museum"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing museum's information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Museums"
+                ],
+                "summary": "Update a museum",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "ObjectID",
+                        "description": "Museum ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated museum object",
+                        "name": "museum",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Museum"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Museum"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a museum by their ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Museums"
+                ],
+                "summary": "Delete a museum",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "ObjectID",
+                        "description": "Museum ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ready": {
+            "get": {
+                "description": "Deeper readiness check that verifies the service can reach required dependencies (e.g. MongoDB). Returns 200 when ready, 503 when not.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Service readiness probe",
+                "responses": {
+                    "200": {
+                        "description": "Museum system is ready",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.Coordinates": {
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "description": "Latitude in decimal degrees",
+                    "type": "number"
+                },
+                "longitude": {
+                    "description": "Longitude in decimal degrees",
+                    "type": "number"
+                }
+            }
+        },
+        "main.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "Error contains the error message",
+                    "type": "string"
+                }
+            }
+        },
+        "main.Museum": {
+            "type": "object",
+            "properties": {
+                "_id": {
+                    "description": "The unique identifier of the museum",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Creation timestamp",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Short description of the museum",
+                    "type": "string"
+                },
+                "hours": {
+                    "description": "Opening hours",
+                    "type": "string"
+                },
+                "imageurl": {
+                    "description": "URL to the museum image",
+                    "type": "string"
+                },
+                "location": {
+                    "description": "Location coordinates of the museum",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/main.Coordinates"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "Name of the museum",
+                    "type": "string"
+                },
+                "parent": {
+                    "description": "Parent is an optional external reference to another document (ObjectID)",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "Entry price information",
+                    "type": "string"
+                },
+                "types": {
+                    "description": "Types/categories of the museum",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "description": "Last update timestamp",
+                    "type": "string"
+                }
+            }
+        },
+        "main.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Message contains a success message",
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Enter 'Bearer \u003ctoken\u003e'",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

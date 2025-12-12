@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple orange scooter vector drawable. Scales to 48dp like bicycle. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Left wheel -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="2"
+        android:pathData="M12,34
+            m-5,0
+            a5,5 0 1,0 10,0
+            a5,5 0 1,0 -10,0" />
+
+    <!-- Right wheel -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="2"
+        android:pathData="M36,34
+            m-5,0
+            a5,5 0 1,0 10,0
+            a5,5 0 1,0 -10,0" />
+
+    <!-- Deck -->
+    <path
+        android:fillColor="#FF9800"
+        android:strokeColor="#00000000"
+        android:strokeWidth="0"
+        android:pathData="M10,28 L34,28 L34,26 L10,26 Z" />
+
+    <!-- Stem -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M30,26 L30,12" />
+
+    <!-- Handlebar -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M26,12 L34,12" />
+
+    <!-- Headlight -->
+    <path
+        android:fillColor="#FFF3E0"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="1"
+        android:pathData="M34,14 a1.5,1.5 0 1,0 0.001,0" />
+
+    <!-- Small kickstand/connector -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="2"
+        android:pathData="M20,28 L22,22" />
+
+</vector>

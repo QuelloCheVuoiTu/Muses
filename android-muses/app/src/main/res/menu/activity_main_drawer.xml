@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_profile"
+            android:icon="@drawable/ic_profile"
+            android:title="Profile" />
+        <item
+            android:id="@+id/nav_missions"
+            android:icon="@drawable/ic_missions"
+            android:title="Missions" />
+        <item
+            android:id="@+id/nav_weather"
+            android:icon="@drawable/ic_weather"
+            android:title="Weather" />
+        <item
+            android:id="@+id/nav_preferences"
+            android:icon="@drawable/ic_preferences"
+            android:title="Preferences" />
+        <item
+            android:id="@+id/nav_daily_login"
+            android:icon="@drawable/ic_calendar"
+            android:title="Daily Login" />
+        <item
+            android:id="@+id/nav_reward"
+            android:icon="@drawable/ic_gift"
+            android:title="Reward" />
+    </group>
+
+    <item android:title="Other">
+        <menu>
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_info"
+                android:title="Informazioni" />
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/ic_logout"
+                android:title="Logout" />
+        </menu>
+    </item>
+
+</menu>

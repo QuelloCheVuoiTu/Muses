@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Styles for API 27+ (Android 8.1+) with support for display cutouts -->
+    <style name="Theme.Muses" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/apple_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/apple_blue_very_light</item>
+        <item name="colorOnPrimaryContainer">@color/apple_blue_dark</item>
+
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/apple_blue_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/apple_blue_very_light</item>
+        <item name="colorOnSecondaryContainer">@color/apple_blue_dark</item>
+
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/apple_blue</item>
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/apple_blue</item>
+        
+        <!-- Window flags for modern displays -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        
+        <!-- Support for display cutouts (notch) -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+
+    <style name="Theme.Muses.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/apple_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/apple_blue_very_light</item>
+        <item name="colorOnPrimaryContainer">@color/apple_blue_dark</item>
+
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/apple_blue_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/apple_blue_very_light</item>
+        <item name="colorOnSecondaryContainer">@color/apple_blue_dark</item>
+
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">@color/apple_blue</item>
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/apple_blue</item>
+        
+        <!-- Window flags for modern displays -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        
+        <!-- Support for display cutouts (notch) -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+</resources>

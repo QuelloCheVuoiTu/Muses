@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MuSES</string>
+    <!-- Add your Mapbox access token here or set it via gradle properties/local.properties -->
+    <string name="mapbox_access_token" translatable="false">pk.eyJ1Ijoic2JydXNvIiwiYSI6ImNtY29ybzFsNDBjdXkybXIyNThnMzBiaDYifQ.iwGa805C_pnJFLMv2_ZQkw</string>
+    <string name="loading">Loading…</string>
+    <string name="unknown">Unknown</string>
+</resources>

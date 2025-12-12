@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Museo_gui" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/apple_blue</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/apple_blue_very_light</item>
+        <item name="colorOnPrimaryContainer">@color/apple_blue_dark</item>
+
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/apple_blue_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/apple_blue_very_light</item>
+        <item name="colorOnSecondaryContainer">@color/apple_blue_dark</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/apple_blue_light</item>
+
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/apple_blue_light</item>
+    </style>
+
+</resources>

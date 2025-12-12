@@ -1,0 +1,4 @@
+firebase_admin==7.1.0
+Flask[async]==2.3.3
+Flask-PyMongo==2.3.0
+pymongo==4.5.0
