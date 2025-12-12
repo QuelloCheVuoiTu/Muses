@@ -5,10 +5,12 @@ on:
     branches: [ "main" ]
     paths-ignore:
       - '.github/workflows/**'
+      - 'sonar-project.properties'  # Ignora modifiche al file di config Sonar
   pull_request:
     branches: [ "main" ]
     paths-ignore:
       - '.github/workflows/**'
+      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -28,15 +30,7 @@ jobs:
       - name: Authenticate Snyk
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
-      # DEBUG: Vediamo dove sono i file
-      - name: Debug File Structure
-        run: |
-          ls -R
-          find . -name "pom.xml"
-          find . -name "requirements.txt"
-
       # Generazione Report
-      # Ho aggiunto --detect-subprojects per aiutare a trovare file nascosti
       - name: Snyk Test
         continue-on-error: true 
         run: |
