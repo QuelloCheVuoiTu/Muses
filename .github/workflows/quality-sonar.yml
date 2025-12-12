@@ -18,31 +18,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fondamentale per Sonar
+          fetch-depth: 0
 
-      # Setup Java necessario per la compilazione del backend
+      # 1. Setup Java (Necessario per far girare lo scanner Sonar stesso)
       - name: Set up JDK 23
         uses: actions/setup-java@v4
         with:
           java-version: '23'
           distribution: 'temurin'
-          cache: maven
 
-      # Compiliamo Java/Kotlin per generare i bytecode (target/classes)
-      # Sonar ha bisogno dei file compilati per l'analisi Java precisa
-      - name: Build Java/Kotlin Classes
-        run: mvn clean package -DskipTests -B
+      # 2. Build Opzionale (Serve solo se vuoi metriche precise su Java)
+      # Se fallisce, continuiamo lo stesso per analizzare Python/Go/Kotlin
+      - name: Build Java Classes (Optional)
+        continue-on-error: true
+        run: mvn clean package -DskipTests -B -f pom.xml || echo "Maven build failed, continuing analysis..."
 
-      # Usa lo Scanner CLI generico (analizza Python, Go, JS, Kotlin e Java insieme)
+      # 3. Analisi Generica (Legge sonar-project.properties)
       - name: Analyze with SonarCloud
         uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        # Nota: Non passiamo argomenti qui, perché leggerà tutto dal file sonar-project.properties
-
-      - name: Sonar Summary
-        if: always()
-        run: |
-          echo "### 📊 SonarCloud Quality" >> $GITHUB_STEP_SUMMARY
-          echo "Analisi multilinguaggio completata. [Vai alla Dashboard](https://sonarcloud.io/dashboard?id=QuelloCheVuoiTu_Muses)" >> $GITHUB_STEP_SUMMARY
+          # Non passare argomenti extra qui, usa il file properties
