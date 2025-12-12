@@ -1,0 +1,54 @@
+name: Security - CodeQL
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/**'  # Ignora modifiche a qualsiasi file in questa cartella
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/**'  # Ignora modifiche a qualsiasi file in questa cartella
+  workflow_dispatch:            # Ti permette di lanciarlo a mano se serve testare la pipeline
+
+jobs:
+  codeql-scan:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # AGGIORNATO A v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: 'java'
+
+      # Setup Java manuale (necessario per build custom)
+      - name: Set up JDK 23
+        uses: actions/setup-java@v4
+        with:
+          java-version: '23'      
+          distribution: 'temurin'
+          cache: maven
+
+      # Compilazione pulita per CodeQL
+      - name: Build Java for CodeQL
+        run: mvn clean package -DskipTests -B
+
+      # AGGIORNATO A v4
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+
+      # Riepilogo specifico per questo workflow
+      - name: CodeQL Summary
+        if: always()
+        run: |
+          echo "### 🔍 CodeQL Security" >> $GITHUB_STEP_SUMMARY
+          echo "Scansione v4 completata. [Vedi Security Tab](https://github.com/${{ github.repository }}/security/code-scanning)" >> $GITHUB_STEP_SUMMARY
