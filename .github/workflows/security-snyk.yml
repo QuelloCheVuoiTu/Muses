@@ -4,20 +4,28 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore:
-      - '.github/workflows/**'  # Ignora modifiche a qualsiasi file in questa cartella
+      - '.github/workflows/**'
   pull_request:
     branches: [ "main" ]
     paths-ignore:
-      - '.github/workflows/**'  # Ignora modifiche a qualsiasi file in questa cartella
-  workflow_dispatch:            # Ti permette di lanciarlo a mano se serve testare la pipeline
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 jobs:
   snyk-scan:
     name: Snyk Security Analysis
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
     steps:
       - uses: actions/checkout@v4
 
+      # --- SETUP AMBIENTI MULTIPLI ---
+      # Snyk ha bisogno dei tool nativi per risolvere l'albero delle dipendenze con precisione
+
+      # 1. Java
       - name: Set up JDK 23
         uses: actions/setup-java@v4
         with:
@@ -25,17 +33,30 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Installazione Snyk e Reporter HTML
+      # 2. Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # 3. Go
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      # Installazione tool Snyk
       - name: Install Snyk & Reporter
         run: npm install -g snyk snyk-to-html
 
       - name: Authenticate Snyk
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
-      # 1. Generazione Report JSON (continue-on-error: true per non bloccare qui)
+      # 1. Generazione Report JSON (Analizza TUTTI i progetti trovati)
       - name: Snyk Test (Generate Report)
-        continue-on-error: true 
+        continue-on-error: true
         id: snyk_test_report
+        # --all-projects cerca file pom.xml, requirements.txt, go.mod, package.json ovunque
         run: |
           snyk test --all-projects --severity-threshold=critical --json > snyk_results.json
 
@@ -51,18 +72,16 @@ jobs:
           name: Snyk-Security-Report
           path: snyk_report.html
 
-      # 4. Quality Gate (Bloccante se ci sono errori critici)
+      # 4. Quality Gate (Bloccante)
       - name: Check Snyk Vulnerabilities (Blocker)
         run: |
           snyk test --all-projects --severity-threshold=critical
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      # Riepilogo specifico per questo workflow
       - name: Snyk Summary
         if: always()
         run: |
           echo "### 🛡️ Snyk Security Report" >> $GITHUB_STEP_SUMMARY
-          echo "| Stato | Risultati |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-          echo "| ✅ Completato | [Scarica Report HTML (Artifacts)](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "Scansione completata su tutti i linguaggi supportati rilevati." >> $GITHUB_STEP_SUMMARY
+          echo "[Scarica Report HTML](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
