@@ -19,7 +19,7 @@ git branch -M main
 git push -uf origin main
 ```
 
-## Integrate with your tools LESGOOOOOOOOOOOOO
+## Integrate with your tools LESGOOOOOOOOOOOO
 
 - [ ] [Set up project integrations](https://gitlab.services.ding.unisannio.it/assd2025/challenge/muses/-/settings/integrations)
 
