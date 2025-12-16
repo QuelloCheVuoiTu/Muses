@@ -3,8 +3,18 @@ name: Quality - SonarCloud
 on:
   push:
     branches: [ "main", "develop" ]
+    paths-ignore:
+      - '.github/workflows/quality-sonar.yml'
+      - '.github/workflows/security-codeql.yml'
+      - '.github/workflows/security-snyk.yml'
+      - 'sonar-project.properties'
   pull_request:
     branches: [ "main", "develop" ]
+    paths-ignore:
+      - '.github/workflows/quality-sonar.yml'
+      - '.github/workflows/security-codeql.yml'
+      - '.github/workflows/security-snyk.yml'
+      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -14,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fondamentale per Sonar
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -30,7 +40,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Rendiamo eseguibili gli script Gradle wrapper nei vari progetti
+      # Rendiamo eseguibili gli script Gradle wrapper
       - name: Make Gradlew Executable
         run: |
           chmod +x android-muses/gradlew
@@ -38,9 +48,7 @@ jobs:
           chmod +x gui/gradlew
           chmod +x quest-builder/gradlew
 
-      # Compiliamo i progetti per generare i .class necessari a Sonar
-      # Usiamo 'assembleDebug' per Android e 'assemble' per Java puro.
-      # continue-on-error: true serve a non bloccare tutto se un sottoprogetto fallisce.
+      # Compilazione con Gradle (Correzione rispetto ai log che mostravano errori Maven)
       - name: Build Java/Kotlin Projects
         continue-on-error: true
         run: |
