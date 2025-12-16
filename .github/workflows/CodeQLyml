@@ -48,28 +48,23 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      # --- BUILD MANUALE PER GO (Corretto per le tue cartelle reali) ---
+      # --- BUILD STEPS ---
       - name: Build Go Services
         if: matrix.language == 'go'
         run: |
           echo "Building Artworks Go..."
           cd artworks-go && go build ./... && cd ..
-          
           echo "Building Museums Go..."
           cd museums-go && go build ./... && cd ..
-          
           echo "Building Users Go..."
           cd users-go && go build ./... && cd ..
 
-      # --- BUILD MANUALE PER JAVA/GRADLE (Corretto per le tue cartelle reali) ---
       - name: Build Java Projects
         if: matrix.language == 'java'
         run: |
-          chmod +x quest-builder/gradlew android-muses/gradlew
-          
+          find . -name "gradlew" -exec chmod +x {} +
           echo "Building Quest Builder..."
           cd quest-builder && ./gradlew clean assemble --no-daemon && cd ..
-          
           echo "Building Android Muses..."
           cd android-muses && ./gradlew clean assembleDebug --no-daemon && cd ..
 
@@ -77,3 +72,12 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{matrix.language}}"
+          # Specifichiamo una cartella di output per trovarla facilmente dopo
+          output: codeql-results
+
+      # --- Upload Report (SARIF) ---
+      - name: Upload CodeQL SARIF Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-report-${{ matrix.language }}
+          path: codeql-results
