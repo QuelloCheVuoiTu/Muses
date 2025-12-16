@@ -3,14 +3,8 @@ name: Security - Snyk Scan
 on:
   push:
     branches: [ "main" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   pull_request:
     branches: [ "main" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -19,46 +13,46 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
+      security-events: write # Necessario per caricare il SARIF su GitHub
 
     steps:
       - uses: actions/checkout@v4
 
-      # Setup ambienti per aiutare Snyk a risolvere le dipendenze
-      - name: Set up JDK 23
+      # Setup ambienti per permettere a Snyk di leggere le dipendenze
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '23'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.10'
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
 
-      - name: Install Snyk & Reporter
-        run: npm install -g snyk snyk-to-html
+      - name: Install Snyk
+        uses: snyk/actions/setup@master
 
-      - name: Authenticate Snyk
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      # SCANSIONE: --all-projects cerca ricorsivamente in tutte le cartelle
+      - name: Snyk Test (All Projects)
+        continue-on-error: true # Non bloccare se trova vulnerabilità, vogliamo il report
+        run: snyk test --all-projects --sarif-file-output=snyk.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      # FIX: Entriamo nella cartella Muses prima di scansionare
-      - name: Snyk Test
-        continue-on-error: true 
-        run: |
-          cd Muses
-          snyk test --all-projects --severity-threshold=critical --json > ../snyk_results.json
+      # Opzionale: Monitoraggio su dashboard Snyk
+      # - name: Snyk Monitor
+      #   run: snyk monitor --all-projects
+      #   env:
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Convert Snyk JSON to HTML
-        run: snyk-to-html -i snyk_results.json -o snyk_report.html
-
-      - name: Upload Snyk HTML Report
-        uses: actions/upload-artifact@v4
+      # Carica i risultati nella Security Tab di GitHub
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          name: Snyk-Security-Report
-          path: snyk_report.html
+          sarif_file: snyk.sarif
