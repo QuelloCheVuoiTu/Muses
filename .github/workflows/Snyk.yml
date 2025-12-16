@@ -74,19 +74,23 @@ jobs:
           snyk-to-html -i snyk_report.json -o snyk_report.html
           
           # 3. Genera SARIF per GitHub Security Tab (Standard)
+          # Nota: Potrebbe contenere troppi progetti per GitHub, ma lo generiamo comunque
           snyk test --all-projects --sarif-file-output=snyk.sarif || true
           
-          # 4. Invia snapshot a Snyk Dashboard
+          # 4. Invia snapshot a Snyk Dashboard (Questo è quello che conta di più)
           snyk monitor --all-projects || true
 
-      # --- Upload Artefatti (Il tuo Report) ---
+      # --- Upload Artefatti (Il tuo Report HTML) ---
       - name: Upload Snyk HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: snyk-html-report
           path: snyk_report.html
 
+      # --- Upload result to GitHub ---
+      # Aggiunto continue-on-error: true perché GitHub rifiuta i file con >20 progetti
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
         with:
           sarif_file: snyk.sarif
