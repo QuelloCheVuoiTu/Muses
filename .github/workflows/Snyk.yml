@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Setup ambienti (Java, Python, Go)
+      # --- Setup Ambienti ---
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -41,15 +41,18 @@ jobs:
         with:
           go-version: '1.21'
 
-      # --- FIX 1: Permessi Gradle (Risolve errore EACCES) ---
+      # --- Installazione Tool di Reporting ---
+      - name: Install Snyk-to-HTML
+        run: |
+          npm install snyk-to-html -g
+
+      # --- Fix Permessi e Dipendenze ---
       - name: Grant execute permission for gradlew
         run: find . -name "gradlew" -exec chmod +x {} +
 
-      # --- FIX 2: Installazione dipendenze Python (Risolve errore "Required packages missing") ---
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          # Cerca tutti i requirements.txt nelle sottocartelle e installali
           for file in $(find . -name "requirements.txt"); do
             echo "Installing dependencies for $file..."
             pip install -r "$file" || echo "Warning: Failed to install $file, continuing..."
@@ -58,20 +61,30 @@ jobs:
       - name: Install Snyk
         uses: snyk/actions/setup@master
 
-      # --- ESECUZIONE SNYK (Test + Monitor) ---
-      - name: Run Snyk (Test & Monitor)
-        # continue-on-error: true assicura che lo step successivo (Upload SARIF) parta anche se si trovano vulnerabilità
+      # --- ESECUZIONE E GENERAZIONE REPORT ---
+      - name: Run Snyk (Test, Monitor & HTML Report)
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          # 1. Snyk Test: Genera il report per GitHub Security Tab
-          # Usiamo "|| true" per non bloccare lo script se trova vulnerabilità, così esegue anche il monitor
+          # 1. Genera JSON per il Report HTML (Dettagliato per umani)
+          snyk test --all-projects --json > snyk_report.json || true
+          
+          # 2. Converte JSON in HTML
+          snyk-to-html -i snyk_report.json -o snyk_report.html
+          
+          # 3. Genera SARIF per GitHub Security Tab (Standard)
           snyk test --all-projects --sarif-file-output=snyk.sarif || true
           
-          # 2. Snyk Monitor: Invia i dati alla dashboard web di Snyk (app.snyk.io)
-          # --- FIX 3: Questo mancava per vedere i dati sulla dashboard ---
+          # 4. Invia snapshot a Snyk Dashboard
           snyk monitor --all-projects || true
+
+      # --- Upload Artefatti (Il tuo Report) ---
+      - name: Upload Snyk HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-html-report
+          path: snyk_report.html
 
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
