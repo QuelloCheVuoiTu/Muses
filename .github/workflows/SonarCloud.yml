@@ -40,7 +40,7 @@ jobs:
       - name: Make Gradlew Executable
         run: find . -name "gradlew" -exec chmod +x {} +
 
-      # Build (IMPORTANTE: Se fallisce, fermiamo tutto, quindi niente continue-on-error)
+      # Build
       - name: Build Java/Kotlin Projects
         run: |
           echo "Building Android Muses..."
@@ -55,9 +55,35 @@ jobs:
           echo "Building Quest Builder..."
           cd quest-builder && ./gradlew assemble --no-daemon && cd ..
 
-      # L'analisi invia tutto alla Dashboard su sonarcloud.io
+      # Analisi Standard
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # --- NUOVI STEP PER GENERARE IL REPORT ---
+      
+      - name: Retrieve SonarCloud Report (API)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # Deve coincidere con la chiave nel tuo sonar-project.properties
+          SONAR_PROJECT_KEY: QuelloCheVuoiTu_Muses 
+        run: |
+          echo "Attendiamo che SonarCloud processi l'analisi..."
+          sleep 20 # Aspettiamo 20 secondi per dare tempo al server
+          
+          echo "Scaricamento Quality Gate Status..."
+          curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY" > sonar_quality_gate.json
+          
+          echo "Scaricamento Issues (prime 100)..."
+          # Scarica le issue aperte (bug, vulnerabilità) in formato JSON
+          curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/issues/search?componentKeys=$SONAR_PROJECT_KEY&resolved=false&ps=100" > sonar_issues.json
+
+      - name: Upload SonarCloud Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-reports
+          path: |
+            sonar_quality_gate.json
+            sonar_issues.json
