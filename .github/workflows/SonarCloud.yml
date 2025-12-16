@@ -36,17 +36,12 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Rendiamo eseguibili gli script Gradle wrapper
+      # Fix Permessi
       - name: Make Gradlew Executable
-        run: |
-          chmod +x android-muses/gradlew
-          chmod +x android-muses-admin/gradlew
-          chmod +x gui/gradlew
-          chmod +x quest-builder/gradlew
+        run: find . -name "gradlew" -exec chmod +x {} +
 
-      # Compilazione con Gradle (Correzione rispetto ai log che mostravano errori Maven)
+      # Build (IMPORTANTE: Se fallisce, fermiamo tutto, quindi niente continue-on-error)
       - name: Build Java/Kotlin Projects
-        continue-on-error: true
         run: |
           echo "Building Android Muses..."
           cd android-muses && ./gradlew assembleDebug --no-daemon && cd ..
@@ -60,6 +55,7 @@ jobs:
           echo "Building Quest Builder..."
           cd quest-builder && ./gradlew assemble --no-daemon && cd ..
 
+      # L'analisi invia tutto alla Dashboard su sonarcloud.io
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@master
         env:
