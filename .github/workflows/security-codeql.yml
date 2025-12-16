@@ -3,8 +3,18 @@ name: Security - CodeQL
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/quality-sonar.yml'
+      - '.github/workflows/security-codeql.yml'
+      - '.github/workflows/security-snyk.yml'
+      - 'sonar-project.properties'
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - '.github/workflows/quality-sonar.yml'
+      - '.github/workflows/security-codeql.yml'
+      - '.github/workflows/security-snyk.yml'
+      - 'sonar-project.properties'
   schedule:
     - cron: '30 1 * * 0'
 
@@ -20,14 +30,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # CodeQL supporta questi linguaggi che hai nel repo
         language: [ 'go', 'java', 'javascript', 'python' ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Java 21 per i progetti Gradle
       - name: Set up JDK 21
         if: matrix.language == 'java'
         uses: actions/setup-java@v4
@@ -35,7 +43,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # Setup Go per i servizi Go
       - name: Set up Go
         if: matrix.language == 'go'
         uses: actions/setup-go@v5
@@ -47,7 +54,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      # --- BUILD MANUALE PER GO ---
+      # --- BUILD MANUALE PER GO (Corretto per le tue cartelle reali) ---
       - name: Build Go Services
         if: matrix.language == 'go'
         run: |
@@ -60,7 +67,7 @@ jobs:
           echo "Building Users Go..."
           cd users-go && go build ./... && cd ..
 
-      # --- BUILD MANUALE PER JAVA/GRADLE ---
+      # --- BUILD MANUALE PER JAVA/GRADLE (Corretto per le tue cartelle reali) ---
       - name: Build Java Projects
         if: matrix.language == 'java'
         run: |
@@ -69,11 +76,8 @@ jobs:
           echo "Building Quest Builder..."
           cd quest-builder && ./gradlew clean assemble --no-daemon && cd ..
           
-          # Compiliamo almeno l'app principale per l'analisi
           echo "Building Android Muses..."
           cd android-muses && ./gradlew clean assembleDebug --no-daemon && cd ..
-
-      # Python e Javascript non richiedono build esplicita in CodeQL v2+
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
