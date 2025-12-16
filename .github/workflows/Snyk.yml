@@ -4,16 +4,12 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore:
-      - '.github/workflows/quality-sonar.yml'
-      - '.github/workflows/security-codeql.yml'
-      - '.github/workflows/security-snyk.yml'
+      - '.github/workflows/**'
       - 'sonar-project.properties'
   pull_request:
     branches: [ "main" ]
     paths-ignore:
-      - '.github/workflows/quality-sonar.yml'
-      - '.github/workflows/security-codeql.yml'
-      - '.github/workflows/security-snyk.yml'
+      - '.github/workflows/**'
       - 'sonar-project.properties'
   workflow_dispatch:
 
