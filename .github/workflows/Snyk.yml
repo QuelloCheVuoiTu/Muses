@@ -24,6 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Setup ambienti (Java, Python, Go)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -40,15 +41,37 @@ jobs:
         with:
           go-version: '1.21'
 
+      # --- FIX 1: Permessi Gradle (Risolve errore EACCES) ---
+      - name: Grant execute permission for gradlew
+        run: find . -name "gradlew" -exec chmod +x {} +
+
+      # --- FIX 2: Installazione dipendenze Python (Risolve errore "Required packages missing") ---
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Cerca tutti i requirements.txt nelle sottocartelle e installali
+          for file in $(find . -name "requirements.txt"); do
+            echo "Installing dependencies for $file..."
+            pip install -r "$file" || echo "Warning: Failed to install $file, continuing..."
+          done
+
       - name: Install Snyk
         uses: snyk/actions/setup@master
 
-      # --all-projects: scansiona tutte le sottocartelle
-      - name: Snyk Test (All Projects)
+      # --- ESECUZIONE SNYK (Test + Monitor) ---
+      - name: Run Snyk (Test & Monitor)
+        # continue-on-error: true assicura che lo step successivo (Upload SARIF) parta anche se si trovano vulnerabilità
         continue-on-error: true
-        run: snyk test --all-projects --sarif-file-output=snyk.sarif
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          # 1. Snyk Test: Genera il report per GitHub Security Tab
+          # Usiamo "|| true" per non bloccare lo script se trova vulnerabilità, così esegue anche il monitor
+          snyk test --all-projects --sarif-file-output=snyk.sarif || true
+          
+          # 2. Snyk Monitor: Invia i dati alla dashboard web di Snyk (app.snyk.io)
+          # --- FIX 3: Questo mancava per vedere i dati sulla dashboard ---
+          snyk monitor --all-projects || true
 
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
