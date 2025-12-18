@@ -55,33 +55,39 @@ jobs:
           echo "Building Quest Builder..."
           cd quest-builder && ./gradlew assemble --no-daemon && cd ..
 
-      # Analisi Standard
+      # Analisi Standard con Blocco Quality Gate
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          # Questo argomento dice alla action di aspettare il risultato.
+          # Se il Quality Gate fallisce, questo step fallirà (Exit Code 1).
+          args: >
+            -Dsonar.qualitygate.wait=true
 
-      # --- NUOVI STEP PER GENERARE IL REPORT ---
+      # --- REPORTING ---
       
       - name: Retrieve SonarCloud Report (API)
+        # "if: always()" è fondamentale: esegue questo step anche se l'analisi sopra è fallita.
+        if: always() 
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Deve coincidere con la chiave nel tuo sonar-project.properties
+          # Assicurati che questa chiave sia corretta
           SONAR_PROJECT_KEY: QuelloCheVuoiTu_Muses 
         run: |
-          echo "Attendiamo che SonarCloud processi l'analisi..."
-          sleep 20 # Aspettiamo 20 secondi per dare tempo al server
+          # Non serve più 'sleep 20' perché lo step precedente finisce solo ad analisi completata.
           
           echo "Scaricamento Quality Gate Status..."
           curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY" > sonar_quality_gate.json
           
           echo "Scaricamento Issues (prime 100)..."
-          # Scarica le issue aperte (bug, vulnerabilità) in formato JSON
           curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/issues/search?componentKeys=$SONAR_PROJECT_KEY&resolved=false&ps=100" > sonar_issues.json
 
       - name: Upload SonarCloud Reports
         uses: actions/upload-artifact@v4
+        if: always() # Carica i report anche se la build è rossa
         with:
           name: sonar-reports
           path: |
