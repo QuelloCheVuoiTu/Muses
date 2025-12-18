@@ -36,7 +36,6 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Fix Permessi
       - name: Make Gradlew Executable
         run: find . -name "gradlew" -exec chmod +x {} +
 
@@ -62,23 +61,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          # Questo argomento dice alla action di aspettare il risultato.
-          # Se il Quality Gate fallisce, questo step fallirà (Exit Code 1).
           args: >
             -Dsonar.qualitygate.wait=true
 
       # --- REPORTING ---
       
       - name: Retrieve SonarCloud Report (API)
-        # "if: always()" è fondamentale: esegue questo step anche se l'analisi sopra è fallita.
         if: always() 
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Assicurati che questa chiave sia corretta
           SONAR_PROJECT_KEY: QuelloCheVuoiTu_Muses 
         run: |
-          # Non serve più 'sleep 20' perché lo step precedente finisce solo ad analisi completata.
-          
           echo "Scaricamento Quality Gate Status..."
           curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$SONAR_PROJECT_KEY" > sonar_quality_gate.json
           
@@ -87,7 +80,7 @@ jobs:
 
       - name: Upload SonarCloud Reports
         uses: actions/upload-artifact@v4
-        if: always() # Carica i report anche se la build è rossa
+        if: always()
         with:
           name: sonar-reports
           path: |
