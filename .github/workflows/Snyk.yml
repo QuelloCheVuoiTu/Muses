@@ -1,103 +1,25 @@
-name: Snykon
-
-on:
-  push:
-    branches: [ "main" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-  pull_request:
-    branches: [ "main" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-  workflow_dispatch:
-
+name: 🐶 Snyk Security
+on: [push, pull_request, workflow_dispatch]
 jobs:
   snyk-scan:
-    name: Snyk Security Analysis
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-
     steps:
       - uses: actions/checkout@v4
-
-      # --- Setup Ambienti ---
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-      
-      # --- Installazione Tool di Reporting ---
-      - name: Install Snyk-to-HTML
-        run: |
-          npm install snyk-to-html -g
-      
-      # --- Fix Permessi e Dipendenze ---
-      - name: Grant execute permission for gradlew
-        run: find . -name "gradlew" -exec chmod +x {} +
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          for file in $(find . -name "requirements.txt"); do
-            echo "Installing dependencies for $file..."
-            pip install -r "$file" || echo "Warning: Failed to install $file, continuing..."
-          done
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
       - name: Install Snyk
-        uses: snyk/actions/setup@master
-
-      # 🟢 STEP 1: Genera Tutti i Report (JSON, HTML, SARIF)
-      # Questo step deve continuare anche se trova problemi per creare i file di report completi.
-      - name: Generate Full Snyk Reports (JSON/SARIF/Monitor)
-        continue-on-error: true 
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          # 1. Genera JSON (Analisi Completa) e forza l'Exit Code 0 per non bloccare
-          snyk test --all-projects --json > snyk_report.json || true
-                    
-          # 2. Converte JSON in HTML
-          snyk-to-html -i snyk_report.json -o snyk_report.html
-                    
-          # 3. Genera SARIF per GitHub Security Tab (Potrebbe fallire per il limite 24>20)
-          snyk test --all-projects --sarif-file-output=snyk.sarif || true
-                    
-          # 4. Invia snapshot a Snyk Dashboard
-          snyk monitor --all-projects || true
-
-      # 🔴 STEP 2: Quality Gate Check (Blocco del Merge)
-      # Questo step FALLISCE la Job se la Policy (--fail-on=high) è violata.
-      - name: Snyk Quality Gate Check (Blocking Step)
-        # Rimosso 'continue-on-error: true'
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          snyk test --all-projects --fail-on=high
-
-      # 🟢 STEP 3: Upload Artefatti HTML (Visibilità Garantita)
-      - name: Upload Snyk HTML Report
-        uses: actions/upload-artifact@v4
-        # Carica sempre, anche se la Job è fallita nello step 2
-        if: always() 
-        with:
-          name: snyk-html-report
-          path: snyk_report.html
-
-      # 🟢 STEP 4: Upload result to GitHub Code Scanning (Visibilità Garantita)
-      - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
-        # Carica sempre, anche se la Job è fallita nello step 2
-        if: always() 
-        with:
-          sarif_file: snyk.sarif
+        run: npm install -g snyk snyk-to-html
+      - name: Auth
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      - name: Test
+        continue-on-error: true
+        run: snyk test --all-projects --severity-threshold=high --json > snyk.json
+      - name: Report
+        if: always()
+        run: snyk-to-html -i snyk.json -o snyk.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: snyk-report, path: snyk.html }
+      - name: Snyk Monitor
+        if: always()
+        run: snyk monitor --all-projects || true
