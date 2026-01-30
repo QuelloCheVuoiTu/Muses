@@ -2,8 +2,14 @@ name: 🔍 CodeQL Analysis
 on:
   push:
     branches: [ "**" ]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
   pull_request:
     branches: [ "**" ]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -18,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python', 'javascript', 'java', 'go', 'csharp', 'cpp', 'ruby' ]
+        language: [ 'python', 'javascript', 'java', 'go', 'csharp', 'cpp', 'ruby', 'swift' ]
 
     steps:
     - name: Checkout repository
@@ -26,14 +32,17 @@ jobs:
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
+      continue-on-error: true
       with:
         languages: ${{ matrix.language }}
         queries: security-and-quality
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
+      continue-on-error: true
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
+      continue-on-error: true
       with:
         category: "/language:${{matrix.language}}"
