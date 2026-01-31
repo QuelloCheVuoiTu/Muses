@@ -8,6 +8,14 @@
           "expires": "2026-02-02"
         }
       }
+    ],
+    "SNYK-JAVA-COMFASTERXMLJACKSONCORE-10500754": [
+      {
+        "*": {
+          "reason": "Boh2",
+          "expires": "2026-02-03"
+        }
+      }
     ]
   }
 }

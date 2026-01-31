@@ -125,9 +125,10 @@ jobs:
                     results.extend(run.get('results', []))
 
                 
-                if fail_build and any(r.get('level') == 'error' for r in results):
-                    print("::error::CodeQL found Critical/Error level vulnerabilities!")
-                    exit_code = 1
+            # Check for errors to block pipeline
+            if fail_build and any(r.get('level') == 'error' for r in results):
+                print("::error::CodeQL found Critical/Error level vulnerabilities!")
+                exit_code = 1
         
 
                 for res in results:
@@ -143,7 +144,10 @@ jobs:
                         loc = f'{uri}:{line}'
 
                     cls = 'error' if level == 'error' else 'warning'
-                    html_content += f'<tr class="{cls}"><td>{rule_id}</td><td>{level}</td><td>{msg}</td><td>{loc}</td></tr>'
+
+                    # CORREZIONE VIRGOLETTE: Usiamo apici singoli per class='{cls}'
+                    # per non rompere la stringa del comando python3 -c "..."
+                    html_content += f'<tr class=\'{cls}\'><td>{rule_id}</td><td>{level}</td><td>{msg}</td><td>{loc}</td></tr>'
 
             html_content += '</table></body></html>'
 
