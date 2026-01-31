@@ -2,8 +2,14 @@ name: 🐶 Snyk Security
 on:
   push:
     branches: [ "**" ]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
   pull_request:
     branches: [ "**" ]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -28,9 +34,6 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install Snyk to HTML
-      run: npm install snyk-to-html -g
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -44,19 +47,28 @@ jobs:
     - name: Smart Dependency Resolution
       continue-on-error: true
       run: |
+        # Maven
         if [ -f "pom.xml" ]; then
           mvn install -DskipTests || true
         fi
+
+        # Gradle
         if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
           chmod +x gradlew || true
           ./gradlew assemble -x test || true
         fi
+
+        # Node.js
         if [ -f "package.json" ]; then
           npm install --ignore-scripts || true
         fi
+
+        # Python
         if [ -f "requirements.txt" ]; then
            pip install -r requirements.txt || true
         fi
+
+        # Go
         if [ -f "go.mod" ]; then
            go mod download || true
         fi
@@ -65,32 +77,11 @@ jobs:
       uses: snyk/actions/setup@master
 
     - name: Snyk Security Scan
-      continue-on-error: true
+      continue-on-error: false
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       run: |
-        snyk test --all-projects --severity-threshold=low --json > snyk_results.json || true
-        snyk test --all-projects --severity-threshold=low --sarif-file-output=snyk.sarif || true
-
-    - name: Generate HTML Report
-      run: |
-        cat snyk_results.json | snyk-to-html -o snyk-report.html
-
-    - name: Check Failure Threshold
-      continue-on-error: false
-      run: |
-        if grep -q "error" snyk_results.json; then
-           if [ "false" = "false" ]; then
-             exit 1
-           fi
-        fi
-
-    - name: Upload HTML Report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: snyk-html-report
-        path: snyk-report.html
+        snyk test --all-projects --severity-threshold=low --sarif-file-output=snyk.sarif
 
     - name: Upload result to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3

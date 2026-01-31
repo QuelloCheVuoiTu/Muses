@@ -2,8 +2,14 @@ name: 📡 SonarCloud Analysis
 on:
   push:
     branches: [ "**" ]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
   pull_request:
     branches: [ "**" ]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -43,20 +49,28 @@ jobs:
       continue-on-error: true
       run: |
         echo "SONAR_BINARIES=." >> $GITHUB_ENV
+
+        # Maven
         if [ -f "pom.xml" ]; then
           mvn package -DskipTests || true
           BIN_PATH=$(find . -type d -name "classes" | tr '\n' ',' || echo ".")
           echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
         fi
+
+        # Gradle
         if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
           chmod +x gradlew || true
           ./gradlew assemble -x test || true
           BIN_PATH=$(find . -type d -path "*/classes/*/main" | tr '\n' ',' || echo ".")
           echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
         fi
+
+        # Node.js
         if [ -f "package.json" ]; then
           npm install --ignore-scripts || true
         fi
+
+        # Python
         if [ -f "requirements.txt" ]; then
            pip install -r requirements.txt || true
         fi
@@ -69,6 +83,3 @@ jobs:
       with:
         args: >
           -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=${{ env.SONAR_BINARIES }}
-
-    - name: Link to Report
-      run: echo "SonarCloud Report available at https://sonarcloud.io/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
