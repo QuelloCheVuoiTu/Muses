@@ -21,7 +21,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 1
+        fetch-depth: 0
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
@@ -52,26 +52,21 @@ jobs:
 
         # Maven
         if [ -f "pom.xml" ]; then
-          echo "Detected Maven project"
           mvn package -DskipTests || true
-          # Find target/classes
           BIN_PATH=$(find . -type d -name "classes" | tr '\n' ',' || echo ".")
           echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
         fi
 
         # Gradle
         if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
-          echo "Detected Gradle project"
           chmod +x gradlew || true
           ./gradlew assemble -x test || true
-          # Find classes/java/main
           BIN_PATH=$(find . -type d -path "*/classes/*/main" | tr '\n' ',' || echo ".")
           echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
         fi
 
         # Node.js
         if [ -f "package.json" ]; then
-          echo "Detected Node.js project"
           npm install --ignore-scripts || true
         fi
 
@@ -87,4 +82,4 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.java.binaries=${{ env.SONAR_BINARIES }}
+          -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=${{ env.SONAR_BINARIES }}
