@@ -11,7 +11,7 @@ import androidx.activity.ComponentActivity
 import it.unisannio.muses.musesadmin.activities.LoginActivity
 import it.unisannio.muses.musesadmin.activities.QRScanActivity
 import it.unisannio.muses.musesadmin.api.RetrofitInstance
-import it.unisannio.muses.musesadmin.helpers.AuthTokenManager
+// import it.unisannio.muses.musesadmin.helpers.AuthTokenManager
 
 class MainActivity : ComponentActivity() {
     private lateinit var authTokenManager: AuthTokenManager
