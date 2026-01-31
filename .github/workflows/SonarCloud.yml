@@ -84,4 +84,4 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          -Dsonar.java.binaries=${{ env.SONAR_BINARIES }}
+          -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=${{ env.SONAR_BINARIES }}

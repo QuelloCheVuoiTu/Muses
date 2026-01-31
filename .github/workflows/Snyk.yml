@@ -5,13 +5,11 @@ on:
     paths-ignore:
       - '.github/workflows/**'
       - 'sonar-project.properties'
-      - '.snyk'
   pull_request:
     branches: [ "**" ]
     paths-ignore:
       - '.github/workflows/**'
       - 'sonar-project.properties'
-      - '.snyk'
   workflow_dispatch:
 
 jobs:
@@ -49,8 +47,8 @@ jobs:
       continue-on-error: false
       run: |
         
-        # Run Snyk and save JSON
-        snyk test --all-projects --severity-threshold=low --json > snyk-results.json || true
+        # Run Snyk and save JSON (forcing root policy)
+        snyk test --all-projects --policy-path=.snyk --severity-threshold=medium --json > snyk-results.json || true
 
         # Convert to HTML
         cat snyk-results.json | snyk-to-html -o snyk-report.html
@@ -68,7 +66,7 @@ jobs:
                if p.get('uniqueCount', 0) > 0:
                    found = True
                    break
-           if found and 'false' == 'true':
+           if found and 'true' == 'true':
                print('::error::Snyk found vulnerabilities!')
                sys.exit(1)
         except Exception as e:
