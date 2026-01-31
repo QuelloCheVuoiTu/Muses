@@ -20,7 +20,6 @@ git push -uf origin main
 
 ## Integrate with your tools
 
-
 - [ ] [Set up project integrations](https://gitlab.services.ding.unisannio.it/assd2025/challenge/muses/-/settings/integrations)
 
 ## Collaborate with your team
