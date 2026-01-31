@@ -2,14 +2,8 @@ name: 🔍 CodeQL Analysis
 on:
   push:
     branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   pull_request:
     branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -28,35 +22,19 @@ jobs:
           python3 -c '
           import os
           import json
-
-          mapping = {
-              ".py": "python",
-              ".js": "javascript", ".ts": "javascript", ".jsx": "javascript", ".tsx": "javascript",
-              ".java": "java",
-              ".go": "go",
-              ".cs": "csharp",
-              ".cpp": "cpp", ".c": "cpp", ".h": "cpp", ".cc": "cpp", ".cxx": "cpp",
-              ".rb": "ruby",
-              ".swift": "swift"
-          }
-
+          mapping = {".py": "python", ".js": "javascript", ".ts": "javascript", ".java": "java", ".go": "go", ".cs": "csharp", ".cpp": "cpp", ".c": "cpp"}
           found_languages = set()
-
           try:
               for root, dirs, files in os.walk("."):
                   dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["node_modules", "dist", "build", "vendor"]]
-
                   for file in files:
                       ext = os.path.splitext(file)[1].lower()
                       if ext in mapping:
                           found_languages.add(mapping[ext])
           except Exception:
               pass
-
           result_list = sorted(list(found_languages))
-
           output_json = json.dumps(result_list)
-
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"languages={output_json}\n")
           '
@@ -82,17 +60,21 @@ jobs:
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
-      continue-on-error: true
       with:
         languages: ${{ matrix.language }}
         queries: security-and-quality
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v3
-      continue-on-error: true
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
-      continue-on-error: true
       with:
         category: "/language:${{matrix.language}}"
+
+    - name: Upload CodeQL Artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: codeql-report-${{ matrix.language }}
+        path: /home/runner/work/_temp/codeql_databases

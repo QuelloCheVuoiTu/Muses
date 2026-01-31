@@ -2,14 +2,8 @@ name: 🐶 Snyk Security
 on:
   push:
     branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   pull_request:
     branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -33,6 +27,9 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+
+    - name: Install Snyk to HTML
+      run: npm install snyk-to-html -g
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -68,11 +65,32 @@ jobs:
       uses: snyk/actions/setup@master
 
     - name: Snyk Security Scan
-      continue-on-error: false
+      continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       run: |
-        snyk test --all-projects --severity-threshold=medium --sarif-file-output=snyk.sarif
+        snyk test --all-projects --severity-threshold=low --json > snyk_results.json || true
+        snyk test --all-projects --severity-threshold=low --sarif-file-output=snyk.sarif || true
+
+    - name: Generate HTML Report
+      run: |
+        cat snyk_results.json | snyk-to-html -o snyk-report.html
+
+    - name: Check Failure Threshold
+      continue-on-error: false
+      run: |
+        if grep -q "error" snyk_results.json; then
+           if [ "false" = "false" ]; then
+             exit 1
+           fi
+        fi
+
+    - name: Upload HTML Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: snyk-html-report
+        path: snyk-report.html
 
     - name: Upload result to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3

@@ -2,14 +2,8 @@ name: 📡 SonarCloud Analysis
 on:
   push:
     branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   pull_request:
     branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
   workflow_dispatch:
 
 jobs:
@@ -75,3 +69,6 @@ jobs:
       with:
         args: >
           -Dsonar.qualitygate.wait=true -Dsonar.java.binaries=${{ env.SONAR_BINARIES }}
+
+    - name: Link to Report
+      run: echo "SonarCloud Report available at https://sonarcloud.io/dashboard?id=${{ secrets.SONAR_PROJECT_KEY }}"
