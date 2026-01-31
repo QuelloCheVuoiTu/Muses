@@ -13,7 +13,57 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-languages:
+    name: Detect Languages
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.languages }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Auto-detect Project Languages
+        id: set-matrix
+        run: |
+          python3 -c '
+          import os
+          import json
+
+          mapping = {
+              ".py": "python",
+              ".js": "javascript", ".ts": "javascript", ".jsx": "javascript", ".tsx": "javascript",
+              ".java": "java",
+              ".go": "go",
+              ".cs": "csharp",
+              ".cpp": "cpp", ".c": "cpp", ".h": "cpp", ".cc": "cpp", ".cxx": "cpp",
+              ".rb": "ruby",
+              ".swift": "swift"
+          }
+
+          found_languages = set()
+
+          try:
+              for root, dirs, files in os.walk("."):
+                  dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["node_modules", "dist", "build", "vendor"]]
+
+                  for file in files:
+                      ext = os.path.splitext(file)[1].lower()
+                      if ext in mapping:
+                          found_languages.add(mapping[ext])
+          except Exception:
+              pass
+
+          result_list = sorted(list(found_languages))
+
+          output_json = json.dumps(result_list)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"languages={output_json}\n")
+          '
+
   analyze:
+    needs: check-languages
+    if: ${{ needs.check-languages.outputs.matrix != '[]' && needs.check-languages.outputs.matrix != '' }}
     name: Analyze
     runs-on: ubuntu-latest
     permissions:
@@ -24,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python', 'javascript', 'java', 'go', 'csharp', 'cpp', 'ruby', 'swift' ]
+        language: ${{ fromJson(needs.check-languages.outputs.matrix) }}
 
     steps:
     - name: Checkout repository

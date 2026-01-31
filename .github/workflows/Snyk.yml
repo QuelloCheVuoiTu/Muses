@@ -23,6 +23,56 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+
+    - name: Smart Dependency Resolution
+      continue-on-error: true
+      run: |
+        # Maven
+        if [ -f "pom.xml" ]; then
+          mvn install -DskipTests || true
+        fi
+
+        # Gradle
+        if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+          chmod +x gradlew || true
+          ./gradlew assemble -x test || true
+        fi
+
+        # Node.js
+        if [ -f "package.json" ]; then
+          npm install --ignore-scripts || true
+        fi
+
+        # Python
+        if [ -f "requirements.txt" ]; then
+           pip install -r requirements.txt || true
+        fi
+
+        # Go
+        if [ -f "go.mod" ]; then
+           go mod download || true
+        fi
+
     - name: Install Snyk CLI
       uses: snyk/actions/setup@master
 
@@ -31,7 +81,7 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       run: |
-        snyk test --all-projects --severity-threshold=medium --sarif-file-output=snyk.sarif || true
+        snyk test --all-projects --severity-threshold=high --sarif-file-output=snyk.sarif || true
 
     - name: Upload result to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3

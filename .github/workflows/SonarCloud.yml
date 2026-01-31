@@ -21,7 +21,64 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
+        fetch-depth: 1
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+
+    - name: Smart Build & Detection
+      id: smart_build
+      continue-on-error: true
+      run: |
+        echo "SONAR_BINARIES=." >> $GITHUB_ENV
+
+        # Maven
+        if [ -f "pom.xml" ]; then
+          echo "Detected Maven project"
+          mvn package -DskipTests || true
+          # Find target/classes
+          BIN_PATH=$(find . -type d -name "classes" | tr '\n' ',' || echo ".")
+          echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
+        fi
+
+        # Gradle
+        if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+          echo "Detected Gradle project"
+          chmod +x gradlew || true
+          ./gradlew assemble -x test || true
+          # Find classes/java/main
+          BIN_PATH=$(find . -type d -path "*/classes/*/main" | tr '\n' ',' || echo ".")
+          echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
+        fi
+
+        # Node.js
+        if [ -f "package.json" ]; then
+          echo "Detected Node.js project"
+          npm install --ignore-scripts || true
+        fi
+
+        # Python
+        if [ -f "requirements.txt" ]; then
+           pip install -r requirements.txt || true
+        fi
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
@@ -30,4 +87,4 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: >
-          
+          -Dsonar.java.binaries=${{ env.SONAR_BINARIES }}
