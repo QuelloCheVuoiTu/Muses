@@ -1,0 +1,13 @@
+{
+  "version": "v1.25.0",
+  "ignore": {
+    "SNYK-JAVA-ORGGLASSFISHJERSEYCORE-14049172": [
+      {
+        "*": {
+          "reason": "Boh",
+          "expires": "2026-02-01"
+        }
+      }
+    ]
+  }
+}

@@ -34,57 +34,49 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 'stable'
-
-    - name: Smart Dependency Resolution
-      continue-on-error: true
+    - name: Install Snyk CLI & Reporter
       run: |
-        # Maven
-        if [ -f "pom.xml" ]; then
-          mvn install -DskipTests || true
-        fi
+        npm install -g snyk snyk-to-html
 
-        # Gradle
-        if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
-          chmod +x gradlew || true
-          ./gradlew assemble -x test || true
-        fi
-
-        # Node.js
-        if [ -f "package.json" ]; then
-          npm install --ignore-scripts || true
-        fi
-
-        # Python
-        if [ -f "requirements.txt" ]; then
-           pip install -r requirements.txt || true
-        fi
-
-        # Go
-        if [ -f "go.mod" ]; then
-           go mod download || true
-        fi
-
-    - name: Install Snyk CLI
-      uses: snyk/actions/setup@master
-
-    - name: Snyk Security Scan
-      continue-on-error: false
+    - name: Authenticate Snyk
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      run: |
-        snyk test --all-projects --severity-threshold=low --sarif-file-output=snyk.sarif
+      run: snyk auth $SNYK_TOKEN
 
-    - name: Upload result to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v3
+    - name: Snyk Security Scan & Report
+      continue-on-error: false
+      run: |
+        
+        # Run Snyk and save JSON
+        snyk test --all-projects --severity-threshold=low --json > snyk-results.json || true
+
+        # Convert to HTML
+        cat snyk-results.json | snyk-to-html -o snyk-report.html
+
+        # If blocking is enabled, check json for vulnerabilities and exit 1
+        python3 -c "
+        import json, sys
+        try:
+           with open('snyk-results.json') as f:
+               data = json.load(f)
+           # Snyk JSON can be a list (multi-project) or dict
+           projects = data if isinstance(data, list) else [data]
+           found = False
+           for p in projects:
+               if p.get('uniqueCount', 0) > 0:
+                   found = True
+                   break
+           if found and 'true' == 'true':
+               print('::error::Snyk found vulnerabilities!')
+               sys.exit(1)
+        except Exception as e:
+           print(e)
+        "
+    
+
+    - name: Upload HTML Report
       if: always()
+      uses: actions/upload-artifact@v4
       with:
-        sarif_file: snyk.sarif
+        name: snyk-security-report
+        path: snyk-report.html
