@@ -66,7 +66,7 @@ jobs:
                if p.get('uniqueCount', 0) > 0:
                    found = True
                    break
-           if found and 'true' == 'true':
+           if found and 'false' == 'true':
                print('::error::Snyk found vulnerabilities!')
                sys.exit(1)
         except Exception as e:

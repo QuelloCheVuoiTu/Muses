@@ -17,7 +17,7 @@ jobs:
     name: Detect Languages
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${ steps.set-matrix.outputs.languages }
+      matrix: ${{ steps.set-matrix.outputs.languages }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
 
   analyze:
     needs: check-languages
-    if: ${ needs.check-languages.outputs.matrix != '[]' && needs.check-languages.outputs.matrix != '' }
+    if: ${{ needs.check-languages.outputs.matrix != '[]' && needs.check-languages.outputs.matrix != '' }}
     name: Analyze
     runs-on: ubuntu-latest
     permissions:
@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ${ fromJson(needs.check-languages.outputs.matrix) }
+        language: ${{ fromJson(needs.check-languages.outputs.matrix) }}
 
     steps:
     - name: Checkout repository
@@ -84,7 +84,7 @@ jobs:
       uses: github/codeql-action/init@v3
       continue-on-error: true
       with:
-        languages: ${ matrix.language }
+        languages: ${{ matrix.language }}
         queries: security-and-quality
 
     - name: Autobuild
@@ -95,7 +95,7 @@ jobs:
       uses: github/codeql-action/analyze@v3
       continue-on-error: true
       with:
-        category: "/language:${matrix.language}"
+        category: "/language:${{matrix.language}}"
         output: sarif-results
 
     - name: Generate HTML Report & Check Status
@@ -108,8 +108,8 @@ jobs:
         fail_build = True
         exit_code = 0
 
-        sarif_path = 'sarif-results/${matrix.language}.sarif'
-        html_path = 'codeql-report-${matrix.language}.html'
+        sarif_path = 'sarif-results/${{matrix.language}}.sarif'
+        html_path = 'codeql-report-${{matrix.language}}.html'
 
         html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922}</style></head><body><h1>CodeQL Analysis Report</h1><table><tr><th>Rule</th><th>Severity</th><th>Message</th><th>Location</th></tr>'''
 
@@ -123,10 +123,10 @@ jobs:
                     results.extend(run.get('results', []))
 
                 
-          # Check for errors to block pipeline
-          if fail_build and any(r.get('level') == 'error' for r in results):
-              print("::error::CodeQL found Critical/Error level vulnerabilities!")
-              exit_code = 1
+                # Check for errors to block pipeline
+                if fail_build and any(r.get('level') == 'error' for r in results):
+                    print("::error::CodeQL found Critical/Error level vulnerabilities!")
+                    exit_code = 1
         
 
                 for res in results:
@@ -159,5 +159,5 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: codeql-report-${ matrix.language }
-        path: codeql-report-${ matrix.language }.html
+        name: codeql-report-${{ matrix.language }}
+        path: codeql-report-${{ matrix.language }}.html
