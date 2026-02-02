@@ -48,7 +48,7 @@ jobs:
       run: |
         
         # Run Snyk and save JSON (forcing root policy)
-        snyk test --all-projects --policy-path=.snyk --severity-threshold=medium --json > snyk-results.json || true
+        snyk test --all-projects --policy-path=.snyk --severity-threshold=low --json > snyk-results.json || true
 
         # Convert to HTML
         cat snyk-results.json | snyk-to-html -o snyk-report.html
