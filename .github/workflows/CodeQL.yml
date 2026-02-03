@@ -31,6 +31,7 @@ jobs:
           import os
           import json
 
+          # Mapping file extension -> language
           mapping = {
               ".py": "python",
               ".js": "javascript", ".ts": "javascript", ".jsx": "javascript", ".tsx": "javascript",
@@ -40,6 +41,12 @@ jobs:
               ".cpp": "cpp", ".c": "cpp", ".h": "cpp", ".cc": "cpp", ".cxx": "cpp",
               ".rb": "ruby",
               ".swift": "swift"
+          }
+
+          mode_map = {
+              "java": "autobuild", "csharp": "autobuild", "python": "none", 
+              "javascript": "none", "ruby": "none", 
+              "go": "autobuild", "cpp": "autobuild", "swift": "autobuild"
           }
 
           found_languages = set()
@@ -55,9 +62,15 @@ jobs:
           except Exception:
               pass
 
-          result_list = sorted(list(found_languages))
+          # Create a list of objects {language: "java", build-mode: "none"}
+          matrix_list = []
+          sorted_langs = sorted(list(found_languages))
 
-          output_json = json.dumps(result_list)
+          for lang in sorted_langs:
+              mode = mode_map.get(lang, "autobuild")
+              matrix_list.append({"language": lang, "build-mode": mode})
+
+          output_json = json.dumps(matrix_list)
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"languages={output_json}\n")
@@ -76,7 +89,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ${{ fromJson(needs.check-languages.outputs.matrix) }}
+        include: ${{ fromJson(needs.check-languages.outputs.matrix) }}
 
     steps:
     - name: Checkout repository
@@ -87,9 +100,15 @@ jobs:
       continue-on-error: true
       with:
         languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
         queries: security-and-quality
 
+    - name: Make build scripts executable
+      if: ${{ matrix.build-mode == 'autobuild' }}
+      run: chmod +x gradlew mvnw || true
+
     - name: Autobuild
+      if: ${{ matrix.build-mode == 'autobuild' }}
       uses: github/codeql-action/autobuild@v4
       continue-on-error: true
 
@@ -172,13 +191,13 @@ jobs:
                     # Block on Critical or High severity regardless of 'level'
                     if sev in ['Critical', 'High']:
                         should_fail = True
-                        print(f'::error::Blocking Pipeline: Found {sev} vulnerability!')
+                        print(f"::error::Blocking Pipeline: Found {sev} vulnerability!")
                         break
 
                     # Also block if the tool explicitly flagged it as an error
                     if level == 'error':
                         should_fail = True
-                        print('::error::Blocking Pipeline: Found Error level issue!')
+                        print("::error::Blocking Pipeline: Found Error level issue!")
                         break
 
                 if fail_build and should_fail:

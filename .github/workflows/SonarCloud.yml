@@ -45,6 +45,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: 'stable'
+        cache: false
 
     - name: Smart Build & Detection
       id: smart_build
@@ -74,7 +75,7 @@ jobs:
         fi
 
     - name: SonarCloud Scan
-      uses: sonarsource/sonarqube-scan-action@v4
+      uses: sonarsource/sonarqube-scan-action@v6
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
