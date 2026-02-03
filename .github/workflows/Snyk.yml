@@ -46,7 +46,7 @@ jobs:
       run: snyk auth $SNYK_TOKEN
 
     - name: Snyk Security Scan & Report
-      continue-on-error: true
+      continue-on-error: false
       run: |
         
         # Run Snyk and save JSON (forcing root policy)
