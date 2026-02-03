@@ -2,8 +2,16 @@ name: 🐶 Snyk Security
 on:
   push:
     branches: ["main"]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
+      - '.snyk'
   pull_request:
     branches: ["main"]
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'sonar-project.properties'
+      - '.snyk'
   workflow_dispatch:
 
 jobs:
