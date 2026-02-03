@@ -1,17 +1,9 @@
 name: 🔍 CodeQL Analysis
 on:
   push:
-    branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-      - '.snyk'
+    branches: ["main"]
   pull_request:
-    branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-      - '.snyk'
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -83,18 +75,18 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       continue-on-error: true
       with:
         languages: ${{ matrix.language }}
         queries: security-and-quality
 
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+      uses: github/codeql-action/autobuild@v4
       continue-on-error: true
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       continue-on-error: true
       with:
         category: "/language:${{matrix.language}}"
@@ -113,7 +105,7 @@ jobs:
         sarif_path = 'sarif-results/${{matrix.language}}.sarif'
         html_path = 'codeql-report-${{matrix.language}}.html'
 
-        html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922}</style></head><body><h1>CodeQL Analysis Report</h1><table><tr><th>Rule</th><th>Severity</th><th>Message</th><th>Location</th></tr>'''
+        html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1><table><tr><th>Rule</th><th>Severity</th><th>Message</th><th>Location</th></tr>'''
 
         try:
             if os.path.exists(sarif_path):
@@ -121,19 +113,74 @@ jobs:
                     data = json.load(f)
 
                 results = []
+                # Map rules by ID for faster lookup
+                rules_map = {}
+
+                # Iterate over runs to build rule map and collect results
                 for run in data.get('runs', []):
-                    results.extend(run.get('results', []))
+                    tool_rules = run.get('tool', {}).get('driver', {}).get('rules', [])
+                    for r in tool_rules:
+                        if 'id' in r:
+                            rules_map[r['id']] = r
+
+                    run_results = run.get('results', [])
+
+                    for res in run_results:
+                        rule = {}
+                        if 'ruleId' in res and res['ruleId'] in rules_map:
+                            rule = rules_map[res['ruleId']]
+                        elif 'ruleIndex' in res and res['ruleIndex'] < len(tool_rules):
+                            rule = tool_rules[res['ruleIndex']]
+
+                        if 'level' not in res:
+                            res['level'] = rule.get('defaultConfiguration', {}).get('level', 'warning')
+
+                        props = rule.get('properties', {})
+                        sec_sev_str = props.get('security-severity', '0')
+
+                        display_sev = 'Low' 
+
+                        try:
+                            score = float(sec_sev_str)
+                            if score >= 9.0: display_sev = 'Critical'
+                            elif score >= 7.0: display_sev = 'High'
+                            elif score >= 4.0: display_sev = 'Medium'
+                            else: display_sev = 'Low'
+                        except:
+                            if res['level'] == 'error': display_sev = 'High'
+                            else: display_sev = 'Medium'
+
+                        res['_display_sev'] = display_sev
+                        results.append(res)
 
                 
-            if fail_build and any(r.get('level') == 'error' for r in results):
-                print("::error::CodeQL found Critical/Error level vulnerabilities!")
-                exit_code = 1
+                should_fail = False
+
+                # Check results for blocking conditions
+                for r in results:
+                    sev = r.get('_display_sev', 'Low')
+                    level = r.get('level', 'warning')
+
+                    # Block on Critical or High severity regardless of 'level'
+                    if sev in ['Critical', 'High']:
+                        should_fail = True
+                        print(f"::error::Blocking Pipeline: Found {sev} vulnerability!")
+                        break
+
+                    # Also block if the tool explicitly flagged it as an error
+                    if level == 'error':
+                        should_fail = True
+                        print("::error::Blocking Pipeline: Found Error level issue!")
+                        break
+
+                if fail_build and should_fail:
+                    exit_code = 1
         
 
                 for res in results:
                     rule_id = res.get('ruleId', 'N/A')
                     msg = res.get('message', {}).get('text', '')
-                    level = res.get('level', 'warning')
+                    display_sev = res.get('_display_sev', 'Medium')
 
                     loc = 'Unknown'
                     if res.get('locations'):
@@ -142,9 +189,12 @@ jobs:
                         line = loc_obj.get('region', {}).get('startLine', 0)
                         loc = f'{uri}:{line}'
 
-                    cls = 'error' if level == 'error' else 'warning'
+                    cls = 'medium'
+                    if display_sev == 'Critical': cls = 'critical'
+                    elif display_sev == 'High': cls = 'high'
+                    elif display_sev == 'Low': cls = 'low'
 
-                    html_content += f'<tr class=\'{cls}\'><td>{rule_id}</td><td>{level}</td><td>{msg}</td><td>{loc}</td></tr>'
+                    html_content += f'<tr class=\'{cls}\'><td>{rule_id}</td><td>{display_sev}</td><td>{msg}</td><td>{loc}</td></tr>'
 
             html_content += '</table></body></html>'
 

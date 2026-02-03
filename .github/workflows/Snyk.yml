@@ -1,17 +1,9 @@
 name: 🐶 Snyk Security
 on:
   push:
-    branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-      - '.snyk'
+    branches: ["main"]
   pull_request:
-    branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-      - '.snyk'
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -55,7 +47,7 @@ jobs:
         # Convert to HTML
         cat snyk-results.json | snyk-to-html -o snyk-report.html
 
-        # If blocking is enabled, check json for vulnerabilities and exit 1
+        # Strict Blocking Logic
         python3 -c "
         import json, sys
         try:
@@ -67,11 +59,17 @@ jobs:
                if p.get('uniqueCount', 0) > 0:
                    found = True
                    break
+
            if found and 'true' == 'true':
-               print('::error::Snyk found vulnerabilities!')
+               print('::error::Blocking Pipeline: Snyk found security vulnerabilities!')
                sys.exit(1)
+           elif found:
+               print('::warning::Snyk found vulnerabilities (Blocking Disabled)')
+
         except Exception as e:
            print(e)
+           if 'true' == 'true':
+              sys.exit(1)
         "
     
 

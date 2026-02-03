@@ -1,17 +1,9 @@
 name: 📡 SonarCloud Analysis
 on:
   push:
-    branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-      - '.snyk'
+    branches: ["main"]
   pull_request:
-    branches: [ "**" ]
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sonar-project.properties'
-      - '.snyk'
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -52,14 +44,12 @@ jobs:
       run: |
         echo "SONAR_BINARIES=." >> $GITHUB_ENV
 
-        # Maven
         if [ -f "pom.xml" ]; then
           mvn package -DskipTests || true
           BIN_PATH=$(find . -type d -name "classes" | tr '\n' ',' || echo ".")
           echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
         fi
 
-        # Gradle
         if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
           chmod +x gradlew || true
           ./gradlew assemble -x test || true
@@ -67,18 +57,16 @@ jobs:
           echo "SONAR_BINARIES=$BIN_PATH" >> $GITHUB_ENV
         fi
 
-        # Node.js
         if [ -f "package.json" ]; then
           npm install --ignore-scripts || true
         fi
 
-        # Python
         if [ -f "requirements.txt" ]; then
            pip install -r requirements.txt || true
         fi
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
+      uses: sonarsource/sonarqube-scan-action@v4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
