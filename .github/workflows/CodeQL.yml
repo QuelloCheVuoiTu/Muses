@@ -172,13 +172,13 @@ jobs:
                     # Block on Critical or High severity regardless of 'level'
                     if sev in ['Critical', 'High']:
                         should_fail = True
-                        print(f"::error::Blocking Pipeline: Found {sev} vulnerability!")
+                        print(f'::error::Blocking Pipeline: Found {sev} vulnerability!')
                         break
 
                     # Also block if the tool explicitly flagged it as an error
                     if level == 'error':
                         should_fail = True
-                        print("::error::Blocking Pipeline: Found Error level issue!")
+                        print('::error::Blocking Pipeline: Found Error level issue!')
                         break
 
                 if fail_build and should_fail:
