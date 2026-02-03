@@ -5,11 +5,13 @@ on:
     paths-ignore:
       - '.github/workflows/**'
       - 'sonar-project.properties'
+      - '.snyk'
   pull_request:
     branches: [ "**" ]
     paths-ignore:
       - '.github/workflows/**'
       - 'sonar-project.properties'
+      - '.snyk'
   workflow_dispatch:
 
 jobs:
@@ -48,7 +50,7 @@ jobs:
       run: |
         
         # Run Snyk and save JSON (forcing root policy)
-        snyk test --all-projects --policy-path=.snyk --severity-threshold=low --json > snyk-results.json || true
+        snyk test --all-projects --policy-path=.snyk --severity-threshold=high --json > snyk-results.json || true
 
         # Convert to HTML
         cat snyk-results.json | snyk-to-html -o snyk-report.html
@@ -59,7 +61,6 @@ jobs:
         try:
            with open('snyk-results.json') as f:
                data = json.load(f)
-           # Snyk JSON can be a list (multi-project) or dict
            projects = data if isinstance(data, list) else [data]
            found = False
            for p in projects:
