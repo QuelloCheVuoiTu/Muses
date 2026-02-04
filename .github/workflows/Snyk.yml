@@ -68,14 +68,20 @@ jobs:
                    found = True
                    break
 
+           # Use the fail_build toggle to determine exit code
            if found and 'true' == 'true':
                print('::error::Blocking Pipeline: Snyk found security vulnerabilities!')
                sys.exit(1)
            elif found:
-               print('::warning::Snyk found vulnerabilities (Blocking Disabled)')
+               print('::warning::Snyk found vulnerabilities (Blocking Disabled via Toggle)')
+               sys.exit(0)
+           else:
+               print('::notice::No vulnerabilities found.')
+               sys.exit(0)
 
         except Exception as e:
            print(e)
+           # If script crashes, block only if toggle is ON
            if 'true' == 'true':
               sys.exit(1)
         "

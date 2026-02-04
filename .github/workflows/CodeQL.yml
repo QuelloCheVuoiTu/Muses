@@ -99,7 +99,7 @@ jobs:
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
-      continue-on-error: true
+      continue-on-error: false
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
@@ -112,11 +112,11 @@ jobs:
     - name: Autobuild
       if: ${{ matrix.build-mode == 'autobuild' }}
       uses: github/codeql-action/autobuild@v4
-      continue-on-error: true
+      continue-on-error: false
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
-      continue-on-error: true
+      continue-on-error: false
       with:
         category: "/language:${{matrix.language}}"
         output: sarif-results
@@ -130,6 +130,7 @@ jobs:
         import sys
         import glob
 
+        # Logic to determine failure based on toggle
         fail_on_error = True == True
         exit_code = 0
 
