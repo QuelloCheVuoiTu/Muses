@@ -121,6 +121,7 @@ jobs:
         output: sarif-results
 
     - name: Generate HTML Report & Check Status
+      if: always()
       run: |
         python3 -c "
         import json
@@ -128,10 +129,9 @@ jobs:
         import sys
         import glob
 
-        fail_build = True
+        fail_on_error = True == True
         exit_code = 0
 
-        # Dynamic SARIF discovery
         sarif_dir = 'sarif-results'
         sarif_path = None
         if os.path.exists(sarif_dir):
@@ -142,8 +142,8 @@ jobs:
         html_path = 'codeql-report-${{matrix.language}}.html'
         html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1>'''
 
-        try:
-            if sarif_path and os.path.exists(sarif_path):
+        if sarif_path and os.path.exists(sarif_path):
+            try:
                 with open(sarif_path, 'r') as f:
                     data = json.load(f)
 
@@ -177,22 +177,22 @@ jobs:
                         res['_display_sev'] = display_sev
                         results.append(res)
 
-                
                 should_fail = False
-                for r in results:
-                    sev = r.get('_display_sev', 'Low')
-                    level = r.get('level', 'warning')
-                    if sev in ['Critical', 'High']:
-                        should_fail = True
-                        print(f"::error::Blocking Pipeline: Found {sev} vulnerability!")
-                        break
-                    if level == 'error':
-                        should_fail = True
-                        print("::error::Blocking Pipeline: Found Error level issue!")
-                        break
-                if fail_build and should_fail:
+                if fail_on_error:
+                    for r in results:
+                        sev = r.get('_display_sev', 'Low')
+                        level = r.get('level', 'warning')
+                        if sev in ['Critical', 'High']:
+                            should_fail = True
+                            print(f'::error::Blocking Pipeline: Found {sev} vulnerability!')
+                            break
+                        if level == 'error':
+                            should_fail = True
+                            print('::error::Blocking Pipeline: Found Error level issue!')
+                            break
+
+                if should_fail:
                     exit_code = 1
-        
 
                 html_content += '<table><tr><th>Rule</th><th>Severity</th><th>Message</th><th>Location</th></tr>'
                 for res in results:
@@ -209,17 +209,25 @@ jobs:
                     if display_sev == 'Critical': cls = 'critical'
                     elif display_sev == 'High': cls = 'high'
                     elif display_sev == 'Low': cls = 'low'
-                    html_content += f'<tr class=\'{cls}\'><td>{rule_id}</td><td>{display_sev}</td><td>{msg}</td><td>{loc}</td></tr>'
+                    html_content += f'<tr class="{cls}"><td>{rule_id}</td><td>{display_sev}</td><td>{msg}</td><td>{loc}</td></tr>'
                 html_content += '</table>'
+
+            except Exception as e:
+                print(f'Error parsing SARIF: {e}')
+                if fail_on_error:
+                    exit_code = 1
+        else:
+            html_content += '<p style="color:#ff7b72"><strong>Analysis Failed:</strong> No SARIF results were produced. The CodeQL scan likely crashed or failed to build the code.</p>'
+            print('::warning::CodeQL Analysis failed to produce results.')
+            if fail_on_error:
+                print('::error::Pipeline blocked because Analysis failed.')
+                exit_code = 1
             else:
-                html_content += '<p style="color:#d29922">No SARIF results found. The analysis may have failed or produced no output.</p>'
+                print('::notice::Analysis failed but pipeline is non-blocking.')
 
-            html_content += '</body></html>'
-            with open(html_path, 'w') as f:
-                f.write(html_content)
-
-        except Exception as e:
-            print(f'Error processing SARIF: {e}')
+        html_content += '</body></html>'
+        with open(html_path, 'w') as f:
+            f.write(html_content)
 
         sys.exit(exit_code)
         "
