@@ -40,8 +40,9 @@ jobs:
               ".rb": "ruby",
               ".swift": "swift"
           }
+          # MODIFICA: Java impostato su "none" per evitare crash su repo multi-modulo senza root build
           mode_map = {
-              "java": "autobuild", "csharp": "autobuild", "python": "none", 
+              "java": "none", "csharp": "autobuild", "python": "none", 
               "javascript": "none", "ruby": "none", 
               "go": "autobuild", "cpp": "autobuild", "swift": "autobuild"
           }
