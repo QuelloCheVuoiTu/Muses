@@ -41,6 +41,12 @@ jobs:
       with:
         python-version: '3.x'
 
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+        cache: false
+
     - name: Install Snyk CLI & Reporter
       run: |
         npm install -g snyk snyk-to-html
@@ -54,16 +60,34 @@ jobs:
       continue-on-error: true
       run: |
         
-        # Install dependencies based on detected files (Basic check)
-        if [ -f "package.json" ]; then npm install; fi
-        if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+        # 0. Smart Build & Install (CRITICAL for Snyk)
+        if [ -f "pom.xml" ]; then
+          echo "Compiling Java (Maven)..."
+          mvn package -DskipTests || true
+        fi
+
+        if [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+          echo "Compiling Java (Gradle)..."
+          chmod +x gradlew || true
+          ./gradlew assemble -x test || true
+        fi
+
+        if [ -f "package.json" ]; then
+           echo "Installing Node deps..."
+           npm install || true
+        fi
+
+        if [ -f "requirements.txt" ]; then
+           echo "Installing Python deps..."
+           pip install -r requirements.txt || true
+        fi
 
         # 1. Run Snyk & Generate JSON (Human Readable)
+        echo "Running Snyk JSON Scan..."
         snyk test --all-projects --policy-path=.snyk --severity-threshold=high --json > snyk-results.json || true
 
         # 2. Run Snyk & Generate SARIF (Code Scanning)
-        # We use || true here to prevent the step from failing immediately if vulns are found,
-        # ensuring the upload step can run.
+        echo "Running Snyk SARIF Scan..."
         snyk test --all-projects --policy-path=.snyk --severity-threshold=high --sarif-file-output=snyk.sarif || true
 
         # 3. Convert JSON to HTML for artifact
@@ -78,6 +102,13 @@ jobs:
       with:
         name: snyk-security-report
         path: snyk-report.html
+
+    - name: Upload JSON Report (For Dashboard)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: snyk-results-json
+        path: snyk-results.json
 
     - name: Upload SARIF to GitHub Code Scanning
       if: always()
@@ -95,7 +126,7 @@ jobs:
         try:
            # Check if SARIF was created (if not, Snyk likely crashed/failed execution)
            if not os.path.exists('snyk.sarif'):
-               print('::error::Snyk failed to run correctly (No SARIF generated). Check dependencies.')
+               print('::error::Snyk failed to run correctly (No SARIF generated). Check logs for build errors.')
                # Always fail if tool execution failed
                sys.exit(1)
 

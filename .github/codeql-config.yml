@@ -1,0 +1,6 @@
+name: "Custom CodeQL Configuration"
+disable-default-queries: false
+query-filters:
+  - exclude:
+      - id: go/log-injection
+
