@@ -36,6 +36,11 @@ jobs:
       with:
         node-version: '20'
 
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
     - name: Install Snyk CLI & Reporter
       run: |
         npm install -g snyk snyk-to-html
@@ -45,46 +50,26 @@ jobs:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       run: snyk auth $SNYK_TOKEN
 
-    - name: Snyk Security Scan & Report
-      continue-on-error: false
+    - name: Snyk Security Scan (Generate Reports)
+      continue-on-error: true
       run: |
         
-        # Run Snyk and save JSON (forcing root policy)
+        # Install dependencies based on detected files (Basic check)
+        if [ -f "package.json" ]; then npm install; fi
+        if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+
+        # 1. Run Snyk & Generate JSON (Human Readable)
         snyk test --all-projects --policy-path=.snyk --severity-threshold=high --json > snyk-results.json || true
 
-        # Convert to HTML
-        cat snyk-results.json | snyk-to-html -o snyk-report.html
+        # 2. Run Snyk & Generate SARIF (Code Scanning)
+        # We use || true here to prevent the step from failing immediately if vulns are found,
+        # ensuring the upload step can run.
+        snyk test --all-projects --policy-path=.snyk --severity-threshold=high --sarif-file-output=snyk.sarif || true
 
-        # Strict Blocking Logic
-        python3 -c "
-        import json, sys
-        try:
-           with open('snyk-results.json') as f:
-               data = json.load(f)
-           projects = data if isinstance(data, list) else [data]
-           found = False
-           for p in projects:
-               if p.get('uniqueCount', 0) > 0:
-                   found = True
-                   break
-
-           # Use the fail_build toggle to determine exit code
-           if found and 'true' == 'true':
-               print('::error::Blocking Pipeline: Snyk found security vulnerabilities!')
-               sys.exit(1)
-           elif found:
-               print('::warning::Snyk found vulnerabilities (Blocking Disabled via Toggle)')
-               sys.exit(0)
-           else:
-               print('::notice::No vulnerabilities found.')
-               sys.exit(0)
-
-        except Exception as e:
-           print(e)
-           # If script crashes, block only if toggle is ON
-           if 'true' == 'true':
-              sys.exit(1)
-        "
+        # 3. Convert JSON to HTML for artifact
+        if [ -f "snyk-results.json" ]; then
+            cat snyk-results.json | snyk-to-html -o snyk-report.html || echo "HTML generation failed"
+        fi
     
 
     - name: Upload HTML Report
@@ -93,3 +78,54 @@ jobs:
       with:
         name: snyk-security-report
         path: snyk-report.html
+
+    - name: Upload SARIF to GitHub Code Scanning
+      if: always()
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: snyk.sarif
+        category: snyk
+
+    - name: Check Status & Block
+      if: always()
+      run: |
+        
+        python3 -c "
+        import json, sys, os
+        try:
+           # Check if SARIF was created (if not, Snyk likely crashed/failed execution)
+           if not os.path.exists('snyk.sarif'):
+               print('::error::Snyk failed to run correctly (No SARIF generated). Check dependencies.')
+               # Always fail if tool execution failed
+               sys.exit(1)
+
+           # Check the JSON results for blocking based on vulnerabilities
+           found_vulns = False
+           if os.path.exists('snyk-results.json'):
+               with open('snyk-results.json') as f:
+                   try:
+                       data = json.load(f)
+                       projects = data if isinstance(data, list) else [data]
+                       for p in projects:
+                           if p.get('uniqueCount', 0) > 0:
+                               found_vulns = True
+                               break
+                   except:
+                       pass
+
+           # Use the fail_build toggle to determine exit code for VULNERABILITIES
+           if found_vulns and 'true' == 'true':
+               print('::error::Blocking Pipeline: Snyk found security vulnerabilities!')
+               sys.exit(1)
+           elif found_vulns:
+               print('::warning::Snyk found vulnerabilities (Blocking Disabled via Toggle)')
+               sys.exit(0)
+           else:
+               print('::notice::No vulnerabilities found.')
+               sys.exit(0)
+
+        except Exception as e:
+           print(f'::error::Script error: {e}')
+           sys.exit(1)
+        "
+    

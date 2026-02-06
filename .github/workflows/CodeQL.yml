@@ -40,7 +40,6 @@ jobs:
               ".rb": "ruby",
               ".swift": "swift"
           }
-          # MODIFICA: Java impostato su "none" per evitare crash su repo multi-modulo senza root build
           mode_map = {
               "java": "none", "csharp": "autobuild", "python": "none", 
               "javascript": "none", "ruby": "none", 
@@ -104,6 +103,7 @@ jobs:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
         queries: security-and-quality
+        config-file: ./.github/codeql-config.yml
 
     - name: Make build scripts executable
       if: ${{ matrix.build-mode == 'autobuild' }}
@@ -130,7 +130,6 @@ jobs:
         import sys
         import glob
 
-        # Logic to determine failure based on toggle
         fail_on_error = True == True
         exit_code = 0
 
