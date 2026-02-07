@@ -57,11 +57,17 @@ jobs:
                           found_languages.add(mapping[ext])
           except Exception:
               pass
+
+          # Fallback se non trova nulla
+          if not found_languages:
+              print("::warning::No supported languages found via extension check.")
+
           matrix_list = []
           sorted_langs = sorted(list(found_languages))
           for lang in sorted_langs:
               mode = mode_map.get(lang, "autobuild")
               matrix_list.append({"language": lang, "build-mode": mode})
+
           output_json = json.dumps(matrix_list)
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"languages={output_json}\n")
@@ -122,26 +128,32 @@ jobs:
         category: "/language:${{matrix.language}}"
         output: sarif-results
 
-    - name: Generate HTML Report & Check Status
+    - name: Generate Report & Check Status
       if: always()
       env:
+        # QUI STA LA FIX: Passiamo la lingua come variabile d'ambiente
         CURRENT_LANG: ${{ matrix.language }}
+        BLOCKING_ENABLED: "True"
+        IGNORED_RULES_JSON: '["go/log-injection", "js/missing-variable-declaration"]'
       run: |
         python3 -c "
         import json
         import os
         import sys
-        import glob
 
-        # --- PARAMETRI INIETTATI ---
-        blocking_enabled = True
-        ignored_rules = ["go/log-injection", "js/missing-variable-declaration"]
-
-        # Recupera la lingua dalle variabili d'ambiente per evitare errori di interpolazione
+        # --- RECUPERO VARIABILI SICURO ---
+        # Leggiamo dall'ambiente. Non può fallire con NameError.
         current_lang = os.environ.get('CURRENT_LANG', 'unknown')
+        blocking_enabled = os.environ.get('BLOCKING_ENABLED') == 'True'
 
-        print(f'::notice::Blocking Enabled: {blocking_enabled}')
+        ignored_json_str = os.environ.get('IGNORED_RULES_JSON', '[]')
+        try:
+            ignored_rules = json.loads(ignored_json_str)
+        except:
+            ignored_rules = []
+
         print(f'::notice::Language: {current_lang}')
+        print(f'::notice::Blocking Enabled: {blocking_enabled}')
 
         # Cerca il file SARIF
         sarif_files = []
@@ -153,13 +165,16 @@ jobs:
         sarif_path = sarif_files[0] if sarif_files else None
         html_path = f'codeql-report-{current_lang}.html'
 
+        # Iniziamo l'HTML base
         html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1>'''
 
         findings_count = 0
         analysis_failed = False
 
+        # --- PARSING SARIF ---
         if sarif_path and os.path.exists(sarif_path):
             try:
+                print(f'::notice::Parsing SARIF: {sarif_path}')
                 with open(sarif_path, 'r') as f:
                     data = json.load(f)
 
@@ -177,15 +192,14 @@ jobs:
                     for res in run_results:
                         rule_id = res.get('ruleId', 'N/A')
 
-                        # WHITELIST: Salta regole ignorate
+                        # WHITELIST: Salta regole ignorate dall'utente
                         if rule_id in ignored_rules:
                             print(f'::notice::Skipping ignored rule: {rule_id}')
                             continue
 
-                        # Se arriviamo qui, è un problema valido
+                        # Se arriviamo qui, il problema è REALE e NON IGNORATO
                         findings_count += 1
 
-                        # Recupera info per HTML
                         rule = rules_map.get(rule_id, {})
                         props = rule.get('properties', {})
                         sec_sev_str = props.get('security-severity', '0')
@@ -203,7 +217,7 @@ jobs:
                         res['_display_sev'] = display_sev
                         results.append(res)
 
-                        # Logga il problema nella console di GitHub
+                        # Logga il problema nella console di GitHub Actions
                         print(f'::warning::Found issue: {rule_id} (Severity: {display_sev})')
 
                 # Generazione HTML Table
@@ -233,22 +247,35 @@ jobs:
                 print(f'::error::Error parsing SARIF: {e}')
                 analysis_failed = True
         else:
+            # Caso in cui CodeQL è crashato prima di produrre il SARIF
             html_content += '<p style="color:#ff7b72"><strong>Analysis Failed:</strong> No SARIF results were produced.</p>'
             print('::error::CodeQL Analysis failed to produce results (No SARIF file found).')
             analysis_failed = True
 
         html_content += '</body></html>'
-        with open(html_path, 'w') as f:
-            f.write(html_content)
 
-        # --- LOGICA DI BLOCCO FINALE (RICHIESTA UTENTE) ---
+        # Scrittura del Report HTML
+        try:
+            with open(html_path, 'w') as f:
+                f.write(html_content)
+            print(f'::notice::Report generated: {html_path}')
+        except Exception as e:
+            print(f'::error::Failed to write HTML report: {e}')
 
-        # 1. Se l'analisi è fallita tecnicamente (crash), blocchiamo sempre se blocking è attivo
-        if analysis_failed and blocking_enabled:
-             print('::error::BLOCKING PIPELINE: Analysis crashed.')
-             sys.exit(1)
+        # --- LOGICA DI BLOCCO FINALE ---
 
-        # 2. Se ci sono problemi trovati (>0) e il blocco è ABILITATO -> EXIT 1 (X ROSSA)
+        # 1. Se l'analisi è fallita tecnicamente (nessun SARIF prodotto)
+        if analysis_failed:
+             print('::error::BLOCKING PIPELINE: Analysis crashed or failed to init.')
+             # Se il blocking è ON, falliamo. Se è OFF, tecnicamente l'analisi è fallita comunque, quindi meglio uscire con errore.
+             # Ma rispettiamo la logica utente:
+             if blocking_enabled:
+                 sys.exit(1)
+             else:
+                 print('::warning::Analysis failed but blocking is disabled. Exiting gently.')
+                 sys.exit(0)
+
+        # 2. Se abbiamo trovato vulnerabilità attive
         if findings_count > 0:
             if blocking_enabled:
                 print(f'::error::BLOCKING PIPELINE: Found {findings_count} active issues! (Block enabled)')
