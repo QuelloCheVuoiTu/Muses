@@ -2,6 +2,6 @@ name: "Custom CodeQL Configuration"
 disable-default-queries: false
 query-filters:
   - exclude:
-      - id: go/log-injection
-      - id: js/missing-variable-declaration
-
+      id: "go/log-injection"
+  - exclude:
+      id: "js/missing-variable-declaration"
