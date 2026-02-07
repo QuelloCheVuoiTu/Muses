@@ -4,12 +4,14 @@ on:
     branches: ["main"]
     paths-ignore:
       - '.github/workflows/**'
+      - '.github/codeql-config.yml'
       - 'sonar-project.properties'
       - '.snyk'
   pull_request:
     branches: ["main"]
     paths-ignore:
       - '.github/workflows/**'
+      - '.github/codeql-config.yml'
       - 'sonar-project.properties'
       - '.snyk'
   workflow_dispatch:
