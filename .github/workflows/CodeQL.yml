@@ -124,6 +124,8 @@ jobs:
 
     - name: Generate HTML Report & Check Status
       if: always()
+      env:
+        CURRENT_LANG: ${{ matrix.language }}
       run: |
         python3 -c "
         import json
@@ -135,7 +137,11 @@ jobs:
         blocking_enabled = True
         ignored_rules = ["go/log-injection", "js/missing-variable-declaration"]
 
+        # Recupera la lingua dalle variabili d'ambiente per evitare errori di interpolazione
+        current_lang = os.environ.get('CURRENT_LANG', 'unknown')
+
         print(f'::notice::Blocking Enabled: {blocking_enabled}')
+        print(f'::notice::Language: {current_lang}')
 
         # Cerca il file SARIF
         sarif_files = []
@@ -145,7 +151,7 @@ jobs:
                     sarif_files.append(os.path.join(root, file))
 
         sarif_path = sarif_files[0] if sarif_files else None
-        html_path = 'codeql-report-${{matrix.language}}.html'
+        html_path = f'codeql-report-{current_lang}.html'
 
         html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1>'''
 
@@ -237,18 +243,18 @@ jobs:
 
         # --- LOGICA DI BLOCCO FINALE (RICHIESTA UTENTE) ---
 
-        # 1. Se l'analisi è fallita tecnicamente (crash)
-        if analysis_failed:
+        # 1. Se l'analisi è fallita tecnicamente (crash), blocchiamo sempre se blocking è attivo
+        if analysis_failed and blocking_enabled:
              print('::error::BLOCKING PIPELINE: Analysis crashed.')
              sys.exit(1)
 
-        # 2. Se ci sono problemi trovati (>0) e il blocco è ABILITATO
+        # 2. Se ci sono problemi trovati (>0) e il blocco è ABILITATO -> EXIT 1 (X ROSSA)
         if findings_count > 0:
             if blocking_enabled:
-                print(f'::error::BLOCKING PIPELINE: Found {findings_count} issues! (Block enabled)')
+                print(f'::error::BLOCKING PIPELINE: Found {findings_count} active issues! (Block enabled)')
                 sys.exit(1)
             else:
-                print(f'::warning::Found {findings_count} issues but blocking is DISABLED. Pipeline continues.')
+                print(f'::warning::Found {findings_count} active issues but blocking is DISABLED. Pipeline continues.')
                 sys.exit(0)
 
         print('::notice::Analysis passed. No issues found.')
