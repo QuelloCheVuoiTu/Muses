@@ -132,9 +132,8 @@ jobs:
         import sys
         import glob
 
-        # Recuperiamo la configurazione dell'utente (ON/OFF)
+        # -- FIX: Passaggio corretto del booleano --
         blocking_enabled = True
-        exit_code = 0
 
         sarif_dir = 'sarif-results'
         sarif_path = None
@@ -147,6 +146,7 @@ jobs:
         html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1>'''
 
         found_blocker = False
+        analysis_failed = False
 
         if sarif_path and os.path.exists(sarif_path):
             try:
@@ -187,8 +187,7 @@ jobs:
                         res['_display_sev'] = display_sev
                         results.append(res)
 
-                        # LOGICA DI BLOCCO
-                        # Blocchiamo solo su Critical e High
+                        # LOGICA DI BLOCCO: Solo Critical o High
                         if display_sev in ['Critical', 'High']:
                             found_blocker = True
 
@@ -214,30 +213,39 @@ jobs:
 
             except Exception as e:
                 print(f'Error parsing SARIF: {e}')
-                # Se l'analisi fallisce e il blocco è attivo, usciamo con errore
-                if blocking_enabled:
-                    exit_code = 1
+                analysis_failed = True
         else:
             html_content += '<p style="color:#ff7b72"><strong>Analysis Failed:</strong> No SARIF results were produced.</p>'
-            print('::warning::CodeQL Analysis failed to produce results.')
-            if blocking_enabled:
-                print('::error::Pipeline blocked because Analysis failed (No SARIF).')
-                exit_code = 1
+            print('::warning::CodeQL Analysis failed to produce results (No SARIF).')
+            analysis_failed = True
 
         html_content += '</body></html>'
         with open(html_path, 'w') as f:
             f.write(html_content)
 
-        # DECISIONE FINALE
+        # --- DECISIONE FINALE SULLO STATO DELLA PIPELINE ---
+
+        # 1. Se l'analisi è fallita (crash del tool)
+        if analysis_failed:
+            if blocking_enabled:
+                print('::error::BLOCKING PIPELINE: CodeQL crashed or failed to generate report.')
+                sys.exit(1)
+            else:
+                print('::warning::CodeQL crashed but blocking is DISABLED. Continuing...')
+                sys.exit(0)
+
+        # 2. Se l'analisi ha successo ma ha trovato vulnerabilità gravi
         if found_blocker:
             if blocking_enabled:
                 print('::error::BLOCKING PIPELINE: Critical or High vulnerabilities found!')
                 sys.exit(1)
             else:
-                print('::warning::Critical/High vulnerabilities found, but blocking is DISABLED.')
+                print('::warning::Critical/High vulnerabilities found, but blocking is DISABLED. Pipeline remains green.')
                 sys.exit(0)
 
-        sys.exit(exit_code)
+        # 3. Tutto pulito
+        print('::notice::No Critical/High vulnerabilities found. Pipeline Clean.')
+        sys.exit(0)
         "
 
     - name: Upload HTML Report
