@@ -132,75 +132,91 @@ jobs:
         import sys
         import glob
 
-        # --- CONFIGURAZIONE UTENTE ---
+        # --- PARAMETRI INIETTATI ---
         blocking_enabled = True
         ignored_rules = ["go/log-injection", "js/missing-variable-declaration"]
 
-        sarif_dir = 'sarif-results'
-        sarif_path = None
-        if os.path.exists(sarif_dir):
-            files = glob.glob(os.path.join(sarif_dir, '*.sarif'))
-            if files:
-                sarif_path = files[0]
+        print(f'::notice::Blocking Enabled: {blocking_enabled}')
+        print(f'::notice::Ignored Rules: {ignored_rules}')
+
+        # Cerca il file SARIF ovunque nella directory sarif-results
+        sarif_files = []
+        for root, dirs, files in os.walk('sarif-results'):
+            for file in files:
+                if file.endswith('.sarif'):
+                    sarif_files.append(os.path.join(root, file))
+
+        sarif_path = sarif_files[0] if sarif_files else None
 
         html_path = 'codeql-report-${{matrix.language}}.html'
         html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1>'''
 
         found_blocker = False
-        analysis_failed = False
         blocker_reasons = []
+        analysis_failed = False
 
         if sarif_path and os.path.exists(sarif_path):
             try:
+                print(f'::notice::Parsing SARIF file: {sarif_path}')
                 with open(sarif_path, 'r') as f:
                     data = json.load(f)
 
                 results = []
                 rules_map = {}
 
-                # Mappatura regole
                 for run in data.get('runs', []):
+                    # Mappa le regole
                     tool_rules = run.get('tool', {}).get('driver', {}).get('rules', [])
                     for r in tool_rules:
                         if 'id' in r: rules_map[r['id']] = r
 
                     run_results = run.get('results', [])
+                    print(f'::notice::Found {len(run_results)} findings in this run.')
+
                     for res in run_results:
                         rule_id = res.get('ruleId', 'N/A')
 
-                        # SALTA REGOLE IGNORATE (White-listing)
+                        # WHITELIST: Salta regole ignorate dall'utente
                         if rule_id in ignored_rules:
+                            print(f'::notice::Skipping ignored rule: {rule_id}')
                             continue
 
-                        rule = {}
-                        if rule_id in rules_map:
-                            rule = rules_map[rule_id]
+                        rule = rules_map.get(rule_id, {})
 
-                        # Determina severita'
+                        # LOGICA SEVERITÀ
                         props = rule.get('properties', {})
                         sec_sev_str = props.get('security-severity', '0')
-                        level = res.get('level', rule.get('defaultConfiguration', {}).get('level', 'warning'))
+                        base_level = res.get('level', rule.get('defaultConfiguration', {}).get('level', 'warning'))
 
                         display_sev = 'Low'
+                        severity_score = 0.0
+
                         try:
-                            score = float(sec_sev_str)
-                            if score >= 9.0: display_sev = 'Critical'
-                            elif score >= 7.0: display_sev = 'High'
-                            elif score >= 4.0: display_sev = 'Medium'
+                            severity_score = float(sec_sev_str)
                         except:
-                            # Fallback se non c'e' score numerico
-                            if level == 'error': display_sev = 'High'
-                            elif level == 'warning': display_sev = 'Medium'
+                            severity_score = 0.0
+
+                        # Classificazione Standard GitHub
+                        if severity_score >= 9.0: display_sev = 'Critical'
+                        elif severity_score >= 7.0: display_sev = 'High'
+                        elif severity_score >= 4.0: display_sev = 'Medium'
+                        else:
+                            if base_level == 'error': display_sev = 'High' # Fallback per errori non di sicurezza
+                            elif base_level == 'warning': display_sev = 'Medium'
 
                         res['_display_sev'] = display_sev
                         results.append(res)
 
-                        # LOGICA DI BLOCCO: Blocca solo su Critical, High o Error
-                        if display_sev in ['Critical', 'High'] or level == 'error':
-                            found_blocker = True
-                            if rule_id not in blocker_reasons:
-                                blocker_reasons.append(f"{rule_id} ({display_sev})")
+                        # LOGICA DI BLOCCO: >= 7.0 (High/Critical) oppure Errori di compilazione/analisi
+                        is_severe = severity_score >= 7.0 or base_level == 'error'
 
+                        if is_severe:
+                            found_blocker = True
+                            msg = f"{rule_id} (Score: {severity_score}, Level: {display_sev} context: {base_level})"
+                            blocker_reasons.append(msg)
+                            print(f'::warning::[BLOCKER] Found severe issue: {msg}')
+
+                # Generazione HTML
                 html_content += '<table><tr><th>Rule</th><th>Severity</th><th>Message</th><th>Location</th></tr>'
                 for res in results:
                     rule_id = res.get('ruleId', 'N/A')
@@ -222,11 +238,11 @@ jobs:
                 html_content += '</table>'
 
             except Exception as e:
-                print(f'Error parsing SARIF: {e}')
+                print(f'::error::Error parsing SARIF: {e}')
                 analysis_failed = True
         else:
             html_content += '<p style="color:#ff7b72"><strong>Analysis Failed:</strong> No SARIF results were produced.</p>'
-            print('::warning::CodeQL Analysis failed to produce results (No SARIF).')
+            print('::error::CodeQL Analysis failed to produce results (No SARIF file found).')
             analysis_failed = True
 
         html_content += '</body></html>'
@@ -237,21 +253,21 @@ jobs:
 
         if analysis_failed:
             if blocking_enabled:
-                print('::error::BLOCKING PIPELINE: Analysis crashed/failed.')
+                print('::error::BLOCKING PIPELINE: Analysis crashed or failed to output SARIF.')
                 sys.exit(1)
             else:
-                print('::notice::Analysis failed, but blocking DISABLED.')
+                print('::warning::Analysis failed but blocking is DISABLED. Continuing...')
                 sys.exit(0)
 
         if found_blocker:
             if blocking_enabled:
-                print(f'::error::BLOCKING PIPELINE: Found severe issues: {blocker_reasons}')
+                print(f'::error::BLOCKING PIPELINE: Found {len(blocker_reasons)} severe issues: {blocker_reasons}')
                 sys.exit(1)
             else:
-                print(f'::warning::Found severe issues: {blocker_reasons}, but blocking DISABLED. Pipeline Green.')
+                print(f'::warning::Found {len(blocker_reasons)} severe issues but blocking is DISABLED. Issues: {blocker_reasons}')
                 sys.exit(0)
 
-        print('::notice::No severe issues found. Pipeline Clean.')
+        print('::notice::Analysis passed. No severe issues found.')
         sys.exit(0)
         "
 
