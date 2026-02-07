@@ -1,4 +1,5 @@
 name: 🔍 CodeQL Analysis
+
 on:
   push:
     branches: ["main"]
@@ -43,8 +44,8 @@ jobs:
               ".swift": "swift"
           }
           mode_map = {
-              "java": "none", "csharp": "autobuild", "python": "none", 
-              "javascript": "none", "ruby": "none", 
+              "java": "none", "csharp": "autobuild", "python": "none",
+              "javascript": "none", "ruby": "none",
               "go": "autobuild", "cpp": "autobuild", "swift": "autobuild"
           }
           found_languages = set()
@@ -83,174 +84,160 @@ jobs:
         include: ${{ fromJson(needs.check-languages.outputs.matrix) }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 'stable'
-        cache: false
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: false
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
-      continue-on-error: false
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
-        queries: security-and-quality
-        config-file: ./.github/codeql-config.yml
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        continue-on-error: false
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-and-quality
+          config-file: ./.github/codeql-config.yml
 
-    - name: Make build scripts executable
-      if: ${{ matrix.build-mode == 'autobuild' }}
-      run: chmod +x gradlew mvnw || true
+      - name: Make build scripts executable
+        if: ${{ matrix.build-mode == 'autobuild' }}
+        run: chmod +x gradlew mvnw || true
 
-    - name: Autobuild
-      if: ${{ matrix.build-mode == 'autobuild' }}
-      uses: github/codeql-action/autobuild@v4
-      continue-on-error: false
+      - name: Autobuild
+        if: ${{ matrix.build-mode == 'autobuild' }}
+        uses: github/codeql-action/autobuild@v4
+        continue-on-error: false
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v4
-      continue-on-error: false
-      with:
-        category: "/language:${{matrix.language}}"
-        output: sarif-results
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        continue-on-error: false
+        with:
+          category: "/language:${{matrix.language}}"
+          output: sarif-results
 
-    - name: Generate HTML Report & Check Status
-      if: always()
-      run: |
-        python3 -c "
-        import json
-        import os
-        import sys
-        import glob
+      # 🔴 UNICA MODIFICA: rimosso `if: always()`
+      - name: Generate HTML Report & Check Status
+        run: |
+          python3 -c "
+          import json
+          import os
+          import sys
+          import glob
 
-        # -- FIX: Passaggio corretto del booleano --
-        blocking_enabled = True
+          blocking_enabled = True
+          exit_code = 0
 
-        sarif_dir = 'sarif-results'
-        sarif_path = None
-        if os.path.exists(sarif_dir):
-            files = glob.glob(os.path.join(sarif_dir, '*.sarif'))
-            if files:
-                sarif_path = files[0]
+          sarif_dir = 'sarif-results'
+          sarif_path = None
+          if os.path.exists(sarif_dir):
+              files = glob.glob(os.path.join(sarif_dir, '*.sarif'))
+              if files:
+                  sarif_path = files[0]
 
-        html_path = 'codeql-report-${{matrix.language}}.html'
-        html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1>'''
+          html_path = 'codeql-report-${{matrix.language}}.html'
+          html_content = '''<html><head><title>CodeQL Report</title><style>body{font-family:sans-serif;padding:20px;background:#0d1117;color:#c9d1d9} table{border-collapse:collapse;width:100%} th,td{border:1px solid #30363d;padding:8px;text-align:left} th{background:#161b22} .error{color:#ff7b72} .warning{color:#d29922} .critical{color:#ff7b72;font-weight:bold} .high{color:#ff7b72} .medium{color:#d29922} .low{color:#c9d1d9}</style></head><body><h1>CodeQL Analysis Report</h1>'''
 
-        found_blocker = False
-        analysis_failed = False
+          found_blocker = False
 
-        if sarif_path and os.path.exists(sarif_path):
-            try:
-                with open(sarif_path, 'r') as f:
-                    data = json.load(f)
+          if sarif_path and os.path.exists(sarif_path):
+              try:
+                  with open(sarif_path, 'r') as f:
+                      data = json.load(f)
 
-                results = []
-                rules_map = {}
-                for run in data.get('runs', []):
-                    tool_rules = run.get('tool', {}).get('driver', {}).get('rules', [])
-                    for r in tool_rules:
-                        if 'id' in r: rules_map[r['id']] = r
-                    run_results = run.get('results', [])
-                    for res in run_results:
-                        rule = {}
-                        if 'ruleId' in res and res['ruleId'] in rules_map:
-                            rule = rules_map[res['ruleId']]
-                        elif 'ruleIndex' in res and res['ruleIndex'] < len(tool_rules):
-                            rule = tool_rules[res['ruleIndex']]
+                  results = []
+                  rules_map = {}
+                  for run in data.get('runs', []):
+                      tool_rules = run.get('tool', {}).get('driver', {}).get('rules', [])
+                      for r in tool_rules:
+                          if 'id' in r: rules_map[r['id']] = r
+                      run_results = run.get('results', [])
+                      for res in run_results:
+                          rule = {}
+                          if 'ruleId' in res and res['ruleId'] in rules_map:
+                              rule = rules_map[res['ruleId']]
+                          elif 'ruleIndex' in res and res['ruleIndex'] < len(tool_rules):
+                              rule = tool_rules[res['ruleIndex']]
 
-                        if 'level' not in res:
-                            res['level'] = rule.get('defaultConfiguration', {}).get('level', 'warning')
+                          if 'level' not in res:
+                              res['level'] = rule.get('defaultConfiguration', {}).get('level', 'warning')
 
-                        props = rule.get('properties', {})
-                        sec_sev_str = props.get('security-severity', '0')
-                        display_sev = 'Low'
+                          props = rule.get('properties', {})
+                          sec_sev_str = props.get('security-severity', '0')
+                          display_sev = 'Low'
 
-                        try:
-                            score = float(sec_sev_str)
-                            if score >= 9.0: display_sev = 'Critical'
-                            elif score >= 7.0: display_sev = 'High'
-                            elif score >= 4.0: display_sev = 'Medium'
-                            else: display_sev = 'Low'
-                        except:
-                            if res['level'] == 'error': display_sev = 'High'
-                            else: display_sev = 'Medium'
+                          try:
+                              score = float(sec_sev_str)
+                              if score >= 9.0: display_sev = 'Critical'
+                              elif score >= 7.0: display_sev = 'High'
+                              elif score >= 4.0: display_sev = 'Medium'
+                              else: display_sev = 'Low'
+                          except:
+                              if res['level'] == 'error': display_sev = 'High'
+                              else: display_sev = 'Medium'
 
-                        res['_display_sev'] = display_sev
-                        results.append(res)
+                          res['_display_sev'] = display_sev
+                          results.append(res)
 
-                        # LOGICA DI BLOCCO: Solo Critical o High
-                        if display_sev in ['Critical', 'High']:
-                            found_blocker = True
+                          if display_sev in ['Critical', 'High']:
+                              found_blocker = True
 
-                html_content += '<table><tr><th>Rule</th><th>Severity</th><th>Message</th><th>Location</th></tr>'
-                for res in results:
-                    rule_id = res.get('ruleId', 'N/A')
-                    msg = res.get('message', {}).get('text', '')
-                    display_sev = res.get('_display_sev', 'Medium')
-                    loc = 'Unknown'
-                    if res.get('locations'):
-                        loc_obj = res['locations'][0].get('physicalLocation', {})
-                        uri = loc_obj.get('artifactLocation', {}).get('uri', '')
-                        line = loc_obj.get('region', {}).get('startLine', 0)
-                        loc = f'{uri}:{line}'
+                  html_content += '<table><tr><th>Rule</th><th>Severity</th><th>Message</th><th>Location</th></tr>'
+                  for res in results:
+                      rule_id = res.get('ruleId', 'N/A')
+                      msg = res.get('message', {}).get('text', '')
+                      display_sev = res.get('_display_sev', 'Medium')
+                      loc = 'Unknown'
+                      if res.get('locations'):
+                          loc_obj = res['locations'][0].get('physicalLocation', {})
+                          uri = loc_obj.get('artifactLocation', {}).get('uri', '')
+                          line = loc_obj.get('region', {}).get('startLine', 0)
+                          loc = f'{uri}:{line}'
 
-                    cls = 'medium'
-                    if display_sev == 'Critical': cls = 'critical'
-                    elif display_sev == 'High': cls = 'high'
-                    elif display_sev == 'Low': cls = 'low'
+                      cls = 'medium'
+                      if display_sev == 'Critical': cls = 'critical'
+                      elif display_sev == 'High': cls = 'high'
+                      elif display_sev == 'Low': cls = 'low'
 
-                    html_content += f'<tr class="{cls}"><td>{rule_id}</td><td>{display_sev}</td><td>{msg}</td><td>{loc}</td></tr>'
-                html_content += '</table>'
+                      html_content += f'<tr class=\"{cls}\"><td>{rule_id}</td><td>{display_sev}</td><td>{msg}</td><td>{loc}</td></tr>'
+                  html_content += '</table>'
 
-            except Exception as e:
-                print(f'Error parsing SARIF: {e}')
-                analysis_failed = True
-        else:
-            html_content += '<p style="color:#ff7b72"><strong>Analysis Failed:</strong> No SARIF results were produced.</p>'
-            print('::warning::CodeQL Analysis failed to produce results (No SARIF).')
-            analysis_failed = True
+              except Exception as e:
+                  print(f'Error parsing SARIF: {e}')
+                  if blocking_enabled:
+                      exit_code = 1
+          else:
+              html_content += '<p style=\"color:#ff7b72\"><strong>Analysis Failed:</strong> No SARIF results were produced.</p>'
+              print('::warning::CodeQL Analysis failed to produce results.')
+              if blocking_enabled:
+                  print('::error::Pipeline blocked because Analysis failed (No SARIF).')
+                  exit_code = 1
 
-        html_content += '</body></html>'
-        with open(html_path, 'w') as f:
-            f.write(html_content)
+          html_content += '</body></html>'
+          with open(html_path, 'w') as f:
+              f.write(html_content)
 
-        # --- DECISIONE FINALE SULLO STATO DELLA PIPELINE ---
+          if found_blocker:
+              if blocking_enabled:
+                  print('::error::BLOCKING PIPELINE: Critical or High vulnerabilities found!')
+                  sys.exit(1)
+              else:
+                  sys.exit(0)
 
-        # 1. Se l'analisi è fallita (crash del tool)
-        if analysis_failed:
-            if blocking_enabled:
-                print('::error::BLOCKING PIPELINE: CodeQL crashed or failed to generate report.')
-                sys.exit(1)
-            else:
-                print('::warning::CodeQL crashed but blocking is DISABLED. Continuing...')
-                sys.exit(0)
+          sys.exit(exit_code)
+          "
 
-        # 2. Se l'analisi ha successo ma ha trovato vulnerabilità gravi
-        if found_blocker:
-            if blocking_enabled:
-                print('::error::BLOCKING PIPELINE: Critical or High vulnerabilities found!')
-                sys.exit(1)
-            else:
-                print('::warning::Critical/High vulnerabilities found, but blocking is DISABLED. Pipeline remains green.')
-                sys.exit(0)
-
-        # 3. Tutto pulito
-        print('::notice::No Critical/High vulnerabilities found. Pipeline Clean.')
-        sys.exit(0)
-        "
-
-    - name: Upload HTML Report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: codeql-report-${{ matrix.language }}
-        path: codeql-report-${{ matrix.language }}.html
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-report-${{ matrix.language }}
+          path: codeql-report-${{ matrix.language }}.html
